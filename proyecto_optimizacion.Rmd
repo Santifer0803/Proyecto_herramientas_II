@@ -7,7 +7,7 @@ output: html_document
 
 # Proyecto grupal CA-0305
 
-Para poder utilizar el proyeto, se iniciará con la descarga de las librarías que se utilizaron (Se pondrán como un comentario ya que cada persona puede tener alguna de estas librerías, de esta manera se podrán elegir las que no se tengan individualmente).
+Para poder utilizar el proyecto, se iniciará con la descarga de las librarías que se utilizaron (Se pondrán como un comentario ya que cada persona puede tener alguna de estas librerías, de esta manera se podrán elegir las que no se tengan individualmente).
 
 ```{r librerias_necesarias}
 # Librerías comunes
@@ -33,7 +33,7 @@ library(ggplot2)
 
 ## Gráficos en paralelo
 
-Inicialmente, se procede a descargar la base da datos a utilizar para generar los gráficos.
+Inicialmente, se procede a descargar la base de datos a utilizar para generar los gráficos.
 
 ```{r descarga_datos}
 library(readxl)
@@ -230,9 +230,9 @@ Se realiza un DataFrame con el tiempo (en segundos) promedio de los histogramas 
 ```{r df_tiempos}
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.graficos <- data.frame(
-  integrante = c("Santiago"),
-  histogramas = c(10.09174),
-  barras = c(20.44117)
+  integrante = c("Santiago", "Eyeri"),
+  histogramas = c(10.09174, 4.83059),
+  barras = c(20.44117, 8.06775)
 )
 ```
 
@@ -293,7 +293,31 @@ Hacemos el DataFrame con los valores promedio de cada integrante (fijarse en la 
 ```{r df_tiempos}
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.mediam <- data.frame(
-  integrante = c("Santiago"),
-  media_movil = c((3.15827) / 1000)
+  integrante = c("Santiago", "Eyeri"),
+  media_movil = c((3.15827) / 1000, (4.30811) / 1000)
 )
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
