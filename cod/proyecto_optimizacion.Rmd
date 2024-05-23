@@ -31,6 +31,37 @@ library(dplyr)
 library(readxl)
 ```
 
+## Operaciones matriciales
+
+Inicialmente se intentaron usar librerías como Matrix, bigmemory, LAPLACK, BLAS, bigalgebra o expm, pero algunas de estas requieren de una instalación externa y más compleja que una librería común y corriente, además de que dichas librerías no optimizan la multiplicación elemento a elemento sino que optimizan el calculo matricial de matrices, o se especializan en otros tipos de procedimientos con matrices, lo cual no es lo que se quiere en este ejercicio.
+
+Esto quiere decir que, por ejemplo, al hacer A %^% 2 o, lo que es lo mismo, A %*% A, se hace la multiplicación matricial de A con A y no la multiplicación elemento a elemento de A con A, que es lo deseado. También se intentó paralelizar el código usando las librerías doParallel y foreach, pero resultó ser bastante más ineficiente hacer esto que hacerlo por defecto.
+
+Así, se decidió que la mejor manera de hacer este ejercicio es hacerlo con lo que trae R por defecto; es decir, crear una matriz con matrix() y utilizar el operador ^ para elevar a la 100 elemento a elemento, así como * y + para multiplicarla por 10 y sumarle 5, respectivamente.
+
+Si bien el tiempo de ejecución puede parecer alto, es lo mejor que se pudo encontrar que está a nuestro alcance.
+
+```{r ejercicio_matriz}
+
+# Se definen las dimensiones de la matriz
+n <- 10000
+
+# Se crea la matriz con las dimensiones deseadas
+matriz <- matrix(runif(n^2), n, n)
+
+# Por último se determina el tiempo promedio de ejecución (en segundos) de realizar el proceso 10 veces
+(microbenchmark(((matriz ^ 100) * 10) + 5, times = 10))
+
+```
+
+```{r tiempo_matrices}
+# Se guarda este tiempo por integrante en un dataframe
+tiempos.matrices <- data.frame(
+  integrante = c("Eyeri", "Santiago", "Paula"), 
+  tiempo = c(4.246259, 5.99183, 7.257987)
+  )
+```
+
 ## Limpieza eficiente
 
 Inicialmente, se procede a descargar la base de datos a utilizar para generar los gráfico, para esto se pondrá en formato [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
@@ -363,7 +394,7 @@ Con el objeto necesario, se probará un método manual, pues las funciones exist
 # Se hace una copia de la columna a copiar
 copia.col <- base.salarios$`Salario base`
 
-# Se crea la función para cambiar los nulos por la media movil en paralelo
+# La siguiente función recibe una columna de dataframe o un vector (col.nulos) y la banda con la que se calcula la media móvil
 media.movil <- function(col.nulos, banda) {
   # Se obtinenen los índices de los valores nulos y la cantidad de filas
   indices.nulos <- which(is.na(base.salarios$`Salario base`))
@@ -402,37 +433,6 @@ tiempos.mediam <- data.frame(
   integrante = c("Santiago", "Eyeri", "Paula"),
   media_movil = c((3.15827) / 1000, (2.78863) / 1000, (10.75752) / 1000)
 )
-```
-
-## Operaciones matriciales
-
-Inicialmente se intentaron usar librerías como Matrix, bigmemory, LAPLACK, BLAS, bigalgebra o expm, pero algunas de estas requieren de una instalación externa y más compleja que una librería común y corriente, además de que dichas librerías no optimizan la multiplicación elemento a elemento sino que optimizan el calculo matricial de matrices, o se especializan en otros tipos de procedimientos con matrices, lo cual no es lo que se quiere en este ejercicio.
-
-Esto quiere decir que, por ejemplo, al hacer A %^% 2 o, lo que es lo mismo, A %*% A, se hace la multiplicación matricial de A con A y no la multiplicación elemento a elemento de A con A, que es lo deseado. También se intentó paralelizar el código usando las librerías doParallel y foreach, pero resultó ser bastante más ineficiente hacer esto que hacerlo por defecto.
-
-Así, se decidió que la mejor manera de hacer este ejercicio es hacerlo con lo que trae R por defecto; es decir, crear una matriz con matrix() y utilizar el operador ^ para elevar a la 100 elemento a elemento, así como * y + para multiplicarla por 10 y sumarle 5, respectivamente.
-
-Si bien el tiempo de ejecución puede parecer alto, es lo mejor que se pudo encontrar que está a nuestro alcance.
-
-```{r ejercicio_matriz}
-
-# Se definen las dimensiones de la matriz
-n <- 10000
-
-# Se crea la matriz con las dimensiones deseadas
-matriz <- matrix(runif(n^2), n, n)
-
-# Por último se determina el tiempo promedio de ejecución (en segundos) de realizar el proceso 10 veces
-(microbenchmark(((matriz ^ 100) * 10) + 5, times = 10))
-
-```
-
-```{r tiempo_matrices}
-# Se guarda este tiempo por integrante en un dataframe
-tiempos.matrices <- data.frame(
-  integrante = c("Eyeri", "Santiago", "Paula"), 
-  tiempo = c(4.246259, 5.99183, 7.257987)
-  )
 ```
 
 ## Eliminación de columnas por porcentaje de valores nulos
