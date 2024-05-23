@@ -487,9 +487,34 @@ tiempos.eliminar.columnas <- data.frame(
   )
 ```
 
+## Imputación por agrupación
 
+Para este ejercicio, se incia realizando la imputación por agrupación de múltiples maneras. Iniciando con data.table.
 
+```{r funcion_agrupacion}
+library(data.table)
+microbenchmark(datatable = {
+  # Se transforma a DataFrame
+  base.dt <- setDT(base.salarios)
+  
+  # Se imputan los valores
+  res.dt <- base.dt[, `Salario base` := ifelse(is.na(`Salario base`), mean(`Salario base`, na.rm = TRUE), `Salario base`), by = .(Género, `Grado de estudio`)]
+},
+dplyr = {
+  res.dp <- base.salarios %>% 
+    group_by(Género, `Grado de estudio`) %>% 
+    mutate(`Salario base` = ifelse(is.na(`Salario base`), mean(`Salario base`, na.rm = TRUE), `Salario base`))
+},
+times = 10
+)
+```
 
+Se guardan los resultados en un DataFrame.
 
-
-
+```{r tiempos_limpieza}
+tiempos.limpieza <- data.frame(
+  integrante = c("Santiago"),
+  con.datatable = c((3.04735) / 1000),
+  con.dplyr = c((7.28283) / 1000)
+)
+```
