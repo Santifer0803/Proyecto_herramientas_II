@@ -20,8 +20,6 @@ Para poder utilizar el proyecto, se iniciará con la descarga de las librarías 
 # install.packages("future")
 # install.packages("furrr")
 # install.packages("data.table")
-# install.packages("doParallel")
-# install.packages("foreach")
 ```
 
 Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
@@ -294,25 +292,117 @@ Hacemos el DataFrame con los valores promedio de cada integrante (fijarse en la 
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.mediam <- data.frame(
   integrante = c("Santiago", "Eyeri"),
-  media_movil = c((3.15827) / 1000, (4.30811) / 1000)
+  media_movil = c((3.15827) / 1000, (6.7584) / 1000)
 )
 ```
 
+## Operaciones matriciales
 
+Inicialmente se intentaron usar librerías como Matrix, bigmemory, LAPLACK, BLAS, bigalgebra o expm, pero algunas de estas requieren de una instalación externa y más compleja que una librería común y corriente, además de que dichas librerías no optimizan la multiplicación elemento a elemento sino que optimizan el calculo matricial de matrices, o se especializan en otros tipos de procedimientos con matrices, lo cual no es lo que se quiere en este ejercicio.
 
+Esto quiere decir que, por ejemplo, al hacer A %^% 2 o, lo que es lo mismo, A %*% A, se hace la multiplicación matricial de A con A y no la multiplicación elemento a elemento de A con A, que es lo deseado. También se intentó paralelizar el código usando las librerías doParallel y foreach, pero resultó ser bastante más ineficiente hacer esto que hacerlo por defecto.
 
+Así, se decidió que la mejor manera de hacer este ejercicio es hacerlo con lo que trae R por defecto; es decir, crear una matriz con matrix() y utilizar el operador ^ para elevar a la 100 elemento a elemento, así como * y + para multiplicarla por 10 y sumarle 5, respectivamente.
 
+Si bien el tiempo de ejecución puede parecer alto, es lo mejor que se pudo encontrar que está a nuestro alcance.
 
+```{r}
 
+library(microbenchmark)
 
+# Se definen las dimensiones de la matriz
+n <- 10000
 
+# Se crea la matriz con las dimensiones deseadas
+matriz <- matrix(runif(n^2), n, n)
 
+operacion <- function(matriz){
+  
+  return(((matriz ^ 100) * 10) + 5)
+  
+}
 
+# Por último se determina el tiempo promedio de ejecución (en segundos) de realizar el proceso 10 veces
 
+plan(multisession)
 
+(microbenchmark(operacion(matriz), times = 10))
 
+```
 
+```{r}
 
+# Se guarda este tiempo por integrante en un dataframe
+tiempos.operaciones.matrices <- data.frame(integrante = c("Eyeri"), tiempo = c(5.068372))
+
+```
+
+## Eliminación de columnas por porcentaje de valores nulos
+
+Similar al ejercicio de media móvil, se inicia descargando la base de datos y se modifica a un objeto de tipo data.table. Luego se crea la función que hace lo deseado y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
+
+```{r}
+
+library(microbenchmark)
+library(data.table)
+library(readxl)
+
+base.salarios <- read_excel("data/Base_salarios.xlsx")
+
+base.salarios <- setDT(base.salarios)
+
+# Función que elimina las columnas de un dataframe en las cuales el porcentaje de valores nulos represanta un porcentaje mayor al indicado por el usuario
+eliminar.columnas <- function(df, porcentaje){
+  
+  filas <- length(df[[1]])
+  
+  i <- 1
+  
+  while(i <= length(df)){
+      
+    cantidad_na <- sum(is.na(df[[i]]))
+      
+    if((cantidad_na / filas) > porcentaje){
+        
+      df <- subset(df, select = -i)
+        
+    } # fin if
+    
+    i <- i + 1
+    
+  } # fin while i
+  
+  return(df)
+  
+}
+
+```
+
+Prueba de la función y tiempo promedio de ejecución
+
+```{r}
+
+prueba.1 <- eliminar.columnas(base.salarios, 0.1)
+
+# Como se puede ver, en ninguna columna del dataframe se presenta una cantidad de valores nulos mayor al 10%, por lo que se procede a probar la función con un porcentaje de 1% para que se eliminen al menos 2 columnas y se pueda ver mejor el tiempo de ejecución de la función
+
+prueba.2 <- eliminar.columnas(base.salarios, 0.01)
+
+# Ahora se procede a determinar el tiempo promedio de ejecución (en segundos) de hacer el proceso 10 veces
+
+plan(multisession)
+
+(microbenchmark(eliminar.columnas(base.salarios, 0.01), times = 10))
+
+```
+
+Por último, se hace un dataframe con los tiempos de ejecución de cada integrante
+
+```{r}
+
+tiempos.eliminar.columnas <- data.frame(integrante = c("Eyeri"), tiempo = c((741.48) / 1000))
+
+```
 
 
 
