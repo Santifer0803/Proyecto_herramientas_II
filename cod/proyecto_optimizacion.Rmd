@@ -20,8 +20,6 @@ Para poder utilizar el proyecto, se iniciará con la descarga de las librarías 
 # install.packages("future")
 # install.packages("furrr")
 # install.packages("data.table")
-# install.packages("doParallel")
-# install.packages("foreach")
 ```
 
 Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
@@ -30,6 +28,7 @@ Para medir los tiempos de ejecución se utilizará la librería [microbenchmark]
 library(microbenchmark)
 library(ggplot2)
 library(dplyr)
+library(readxl)
 ```
 
 ## Limpieza eficiente
@@ -42,7 +41,6 @@ Además, se usará [chartr](https://www.geeksforgeeks.org/substitute-characters-
 
 ```{r limpieza_datatable}
 library(data.table)
-library(readxl)
 muertes.original <- read_excel("data/muertes_en_costa_rica_2014_2021.xlsx")
 
 # Se toma el tiempo 10 veces
@@ -268,9 +266,9 @@ Se guardan los resultados en un DataFrame.
 
 ```{r tiempos_limpieza}
 tiempos.limpieza <- data.frame(
-  integrante = c("Santiago","Paula"),
-  con.datatable = c(3.05496, 7.309475),
-  sin.datatable = c(4.77649, 11.26839)
+  integrante = c("Santiago","Paula", "Eyeri"),
+  con.datatable = c(3.05496, 7.309475, 4.02244),
+  sin.datatable = c(4.77649, 11.26839, 5.891517)
 )
 ```
 
@@ -340,8 +338,8 @@ Se realiza un DataFrame con el tiempo (en segundos) promedio de los histogramas 
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.graficos <- data.frame(
   integrante = c("Santiago", "Eyeri", "Paula"),
-  histogramas = c(8.46395, 4.83059, 8.531366),
-  barras = c(13.31152, 8.06775, 14.893497)
+  histogramas = c(8.46395, 4.682311, 8.531366),
+  barras = c(13.31152, 7.107419, 14.893497)
 )
 ```
 
@@ -351,7 +349,6 @@ Inicialmente, se descarga la base para reemplazar la media móvil en una de sus 
 
 ```{r dascarga_datos_2}
 library(data.table)
-library(readxl)
 
 # Se descargan los datos normalmente
 base.salarios <- read_excel("data/Base_salarios.xlsx")
@@ -403,7 +400,7 @@ Hacemos el DataFrame con los valores promedio de cada integrante (fijarse en la 
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.mediam <- data.frame(
   integrante = c("Santiago", "Eyeri", "Paula"),
-  media_movil = c((3.15827) / 1000, (6.7584) / 1000, (10.75752) / 1000)
+  media_movil = c((3.15827) / 1000, (2.78863) / 1000, (10.75752) / 1000)
 )
 ```
 
@@ -418,7 +415,6 @@ Así, se decidió que la mejor manera de hacer este ejercicio es hacerlo con lo 
 Si bien el tiempo de ejecución puede parecer alto, es lo mejor que se pudo encontrar que está a nuestro alcance.
 
 ```{r ejercicio_matriz}
-library(microbenchmark)
 
 # Se definen las dimensiones de la matriz
 n <- 10000
@@ -426,14 +422,8 @@ n <- 10000
 # Se crea la matriz con las dimensiones deseadas
 matriz <- matrix(runif(n^2), n, n)
 
-operacion <- function(matriz){
-  
-  return(((matriz ^ 100) * 10) + 5)
-  
-}
-
 # Por último se determina el tiempo promedio de ejecución (en segundos) de realizar el proceso 10 veces
-(microbenchmark(operacion(matriz), times = 10))
+(microbenchmark(((matriz ^ 100) * 10) + 5, times = 10))
 
 ```
 
@@ -441,7 +431,7 @@ operacion <- function(matriz){
 # Se guarda este tiempo por integrante en un dataframe
 tiempos.matrices <- data.frame(
   integrante = c("Eyeri", "Santiago", "Paula"), 
-  tiempo = c(5.068372, 5.99183, 7.257987)
+  tiempo = c(4.246259, 5.99183, 7.257987)
   )
 ```
 
@@ -493,5 +483,13 @@ Por último, se hace un dataframe con los tiempos de ejecución de cada integran
 ```{r df_elimcol}
 tiempos.eliminar.columnas <- data.frame(
   integrante = c("Eyeri", "Santiago", "Paula"), 
-  tiempo = c((741.48) / 1000, (766.26) / 1000000), (3.56987	) / 1000 )
+  tiempo = c((975.28) / 1000000, (766.26) / 1000000, (3569.87) / 1000000)
+  )
 ```
+
+
+
+
+
+
+
