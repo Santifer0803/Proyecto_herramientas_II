@@ -20,6 +20,8 @@ Para poder utilizar el proyecto, se iniciará con la descarga de las librarías 
 # install.packages("future")
 # install.packages("furrr")
 # install.packages("data.table")
+# install.packages("doParallel")
+# install.packages("foreach")
 ```
 
 Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
@@ -27,148 +29,257 @@ Para medir los tiempos de ejecución se utilizará la librería [microbenchmark]
 ```{r librerias_generales}
 library(microbenchmark)
 library(ggplot2)
+library(dplyr)
+```
+
+## Limpieza eficiente
+
+Inicialmente, se procede a descargar la base de datos a utilizar para generar los gráfico, para esto se pondrá en formato [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
+
+Los data.table tienen un operador muy importante que es el [:=](https://stackoverflow.com/questions/7029944/when-should-i-use-the-operator-in-data-table), lo cual mejora en gran medida la eficiencia de muchas operciones.
+
+Además, se usará [chartr](https://www.geeksforgeeks.org/substitute-characters-of-a-string-in-r-programming-chartr-function/) para modificar los caracteres únicos requeridos, pues esta función está optimizada para ese proceso.
+
+```{r limpieza_datatable}
+library(data.table)
+library(readxl)
+muertes.original <- read_excel("data/muertes_en_costa_rica_2014_2021.xlsx")
+
+# Se toma el tiempo 10 veces
+(microbenchmark(con.datatable = {
+  # Se pasan a data.table (se puede leer directamente, pero no admite carpetas)
+  muertes.dt <- setDT(muertes.original)
+  
+  # Se filtra por edades mayores o iguales a 15 y años mayores o iguales a 2014
+  muertes.dt <-
+    muertes.dt[edads >= 15 &
+                 anodef >= 2014 &
+                 anotrab >= 2014 & anodeclara >= 2014]
+  
+  # Correcciones ortográficas con chartr y el operador :=
+  muertes.dt[, ocuparec := chartr("Ã", "i", ocuparec)]
+  muertes.dt[, regsalud := chartr("Ã", "i", regsalud)]
+  muertes.dt[, reginec := chartr("Ã", "i", reginec)]
+  muertes.dt[, autopsia := chartr("Ã", "i", autopsia)]
+  muertes.dt[, asistmed := chartr("Ã", "i", asistmed)]
+  
+  # Correcciones ortográficas con gsub y el operador :=
+  muertes.dt[, estcivil := gsub("Ã³", "o", estcivil)]
+  muertes.dt[, regsalud := gsub("Ã³", "o", regsalud)]
+  muertes.dt[, provincia := gsub("Ã³", "o", provincia)]
+  muertes.dt[, provocu := gsub("Ã³", "o", provocu)]
+  muertes.dt[, provregis := gsub("Ã³", "o", provregis)]
+  muertes.dt[, reginec := gsub("Ã³", "o", reginec)]
+  muertes.dt[, ocuparec := gsub("Ã¡", "a", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Ã©", "e", ocuparec)]
+  muertes.dt[, provincia := gsub("Ã©", "e", provincia)]
+  muertes.dt[, provocu := gsub("Ã©", "e", provocu)]
+  muertes.dt[, provregis := gsub("Ã©", "e", provregis)]
+  muertes.dt[, autopsia := gsub("Ã©", "e", autopsia)]
+  muertes.dt[, asistmed := gsub("Ã©", "e", asistmed)]
+  muertes.dt[, nacionalid := gsub("^(?!Costa Rica$).*", "Extranjero", nacionalid, perl = TRUE)]
+  muertes.dt[, reginec := gsub("Paci­fico", "Pacifico", reginec)]
+  muertes.dt[, regsalud := gsub("Paci­fico", "Pacifico", regsalud)]
+  muertes.dt[, estcivil := gsub("Ignorado", "Otros", estcivil)]
+  muertes.dt[, estcivil := gsub("Union libre", "Otros", estcivil)]
+  muertes.dt[, estcivil := gsub("Separado", "Otros", estcivil)]
+  muertes.dt[, estcivil := gsub("Menor", "Otros", estcivil)]
+  muertes.dt[, edadsrec := gsub("100 y mÃ¡s", "100 - 121", edadsrec)]
+  muertes.dt[, ocuparec := gsub("Profesionales cienti­ficos e intelectuales",
+                                "Trabajadores activos",
+                                ocuparec)]
+  muertes.dt[, ocuparec := gsub(
+    "Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros",
+    "Trabajadores activos",
+    "Trabajadores activos",
+    ocuparec
+  )]
+  muertes.dt[, ocuparec := gsub(
+    "Trabajadores de los servicios y vendedores de comercios y mercados",
+    "Trabajadores activos",
+    ocuparec
+  )]
+  muertes.dt[, ocuparec := gsub("Ocupaciones elementales", "Trabajadores activos", ocuparec)]
+  muertes.dt[, ocuparec := gsub(
+    "Operadores de instalaciones y maquinas y ensambladores",
+    "Trabajadores activos",
+    ocuparec
+  )]
+  muertes.dt[, ocuparec := gsub("Tecnicos y profesionales de nivel medio",
+                                "Trabajadores activos",
+                                ocuparec)]
+  muertes.dt[, ocuparec := gsub(
+    "Oficiales, operarios y artesanos de artes mecanicas y de otros oficios",
+    "Trabajadores activos",
+    ocuparec
+  )]
+  muertes.dt[, ocuparec := gsub("Personal de apoyo administrativo",
+                                "Trabajadores activos",
+                                ocuparec)]
+  muertes.dt[, ocuparec := gsub("Directores y gerentes", "Trabajadores activos", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Pensionado", "Otros", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Persona con discapacidad", "Otros", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Estudiante", "Otros", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Mal especificadas", "Otros", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Privado de libertad", "Otros", ocuparec)]
+  
+  # Eliminación de columnas
+  muertes.dt[, c(
+    "pc",
+    "causamuer",
+    "des_causa",
+    "pcocu",
+    "nacmadre",
+    "pcregis",
+    "gruposcb",
+    "instmurio"
+  ) := NULL]
+}, 
+times = 10))
+```
+
+Se realiza el mismo proceso con DataFrames.
+
+```{r limpieza_df}
+# Se toma el tiempo con DataFrames
+microbenchmark(sin.datatable = {
+  # Se crea una copia para que haga el proceso correctamente en cada iteración
+  muertes.df <- muertes.original
+  
+  # Se filtra por edades mayores o iguales a 15 y años mayores o iguales a 2014
+  muertes.df <- muertes.df[muertes.df$edads >= 15,]
+  muertes.df <- muertes.df[muertes.df$anodef >= 2014,]
+  muertes.df <- muertes.df[muertes.df$anotrab >= 2014,]
+  muertes.df <- muertes.df[muertes.df$anodeclara >= 2014,]
+  
+  # Correcciones ortográficas con chartr
+  muertes.df$ocuparec <- chartr("Ã", "i", muertes.df$ocuparec)
+  muertes.df$regsalud <- chartr("Ã", "i", muertes.df$regsalud)
+  muertes.df$reginec <- chartr("Ã", "i", muertes.df$reginec)
+  muertes.df$autopsia <- chartr("Ã", "i", muertes.df$autopsia)
+  muertes.df$asistmed <- chartr("Ã", "i", muertes.df$asistmed)
+  
+  # Correcciones ortográficas con gsub
+  muertes.df$estcivil <- gsub("Ã³", "o", muertes.df$estcivil)
+  muertes.df$ocuparec <- gsub("Ã¡", "a", muertes.df$ocuparec)
+  muertes.df$ocuparec <- gsub("Ã©", "e", muertes.df$ocuparec)
+  muertes.df$regsalud <- gsub("i³", "o", muertes.df$regsalud)
+  muertes.df$provincia <- gsub("Ã©", "e", muertes.df$provincia)
+  muertes.df$provincia <- gsub("Ã³", "o", muertes.df$provincia)
+  muertes.df$provocu <- gsub("Ã©", "e", muertes.df$provocu)
+  muertes.df$provocu <- gsub("Ã³", "o", muertes.df$provocu)
+  muertes.df$provregis <- gsub("Ã©", "e", muertes.df$provregis)
+  muertes.df$provregis <- gsub("Ã³", "o", muertes.df$provregis)
+  muertes.df$reginec <- gsub("i³", "o", muertes.df$reginec)
+  muertes.df$edadsrec <-
+    gsub("100 y mÃ¡s", "100 - 121", muertes.df$edadsrec)
+  muertes.df$autopsia <- gsub("Ã©", "e", muertes.df$autopsia)
+  muertes.df$asistmed <- gsub("Ã©", "e", muertes.df$asistmed)
+  muertes.df$reginec <-
+    gsub("Paci­fico", "Pacifico", muertes.df$reginec)
+  muertes.df$regsalud <-
+    gsub("Paci­fico", "Pacifico", muertes.df$regsalud)
+  muertes.df$nacionalid <-
+    gsub("^(?!Costa Rica$).*",
+         "Extranjero",
+         muertes.df$nacionalid,
+         perl = TRUE)
+  muertes.df$estcivil <-
+    gsub("Ignorado", "Otros", muertes.df$estcivil)
+  muertes.df$estcivil <-
+    gsub("Union libre", "Otros", muertes.df$estcivil)
+  muertes.df$estcivil <-
+    gsub("Separado", "Otros", muertes.df$estcivil)
+  muertes.df$estcivil <- gsub("Menor", "Otros", muertes.df$estcivil)
+  muertes.df$ocuparec <-
+    gsub(
+      "Profesionales cienti­ficos e intelectuales",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub(
+      "Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub("Ocupaciones elementales",
+         "Trabajadores activos",
+         muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub(
+      "Trabajadores de los servicios y vendedores de comercios y mercados",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub(
+      "Operadores de instalaciones y maquinas y ensambladores",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub(
+      "Tecnicos y profesionales de nivel medio",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub(
+      "Oficiales, operarios y artesanos de artes mecanicas y de otros oficios",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub("Personal de apoyo administrativo",
+         "Trabajadores activos",
+         muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Directores y gerentes",
+         "Trabajadores activos",
+         muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Pensionado", "Otros", muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Persona con discapacidad", "Otros", muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Estudiante", "Otros", muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Mal especificadas", "Otros", muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Privado de libertad", "Otros", muertes.df$ocuparec)
+  
+  # Eliminación de columnas
+  muertes.df <- muertes.df %>%
+    select(-pc,
+           -causamuer,
+           -des_causa,
+           -pcocu,
+           -nacmadre,
+           -pcregis,
+           -gruposcb,
+           -instmurio)
+},
+times = 10)
+```
+
+Se guardan los resultados en un DataFrame.
+
+```{r tiempos_limpieza}
+tiempos.limpieza <- data.frame(
+  integrante = c("Santiago"),
+  con.datatable = c(3.05496),
+  sin.datatable = c(4.77649)
+)
 ```
 
 ## Gráficos en paralelo
 
-Inicialmente, se procede a descargar la base de datos a utilizar para generar los gráficos.
-
-```{r descarga_datos}
-library(readxl)
-muertes.cr <- read_excel("data/muertes_en_costa_rica_2014_2021.xlsx")
-```
-
-Se remueven las edades de 15 años o más.
-
-```{r limpieza_edades}
-muertes.cr <- muertes.cr[muertes.cr$edads >= 15, ]
-```
-
-Se remueven las observaciones de años anteriores a 2014, la base cuenta con muy pocas.
-
-```{r limpieza_annos}
-muertes.cr <- muertes.cr[muertes.cr$anodef >= 2014, ]
-
-muertes.cr <- muertes.cr[muertes.cr$anotrab >= 2014, ]
-
-muertes.cr <- muertes.cr[muertes.cr$anodeclara >= 2014, ]
-```
-
-Se procede a corregir algunos errores ortográficos.
-
-```{r errores_ortograficos}
-# Se pondrá todo sin tílde, para evitar errores al correr el código
-muertes.cr$estcivil <- gsub("Ã³", "o", muertes.cr$estcivil)
-
-muertes.cr$ocuparec <- gsub("Ã¡", "a", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Ã©", "e", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Ã", "i", muertes.cr$ocuparec)
-
-muertes.cr$regsalud <- gsub("Ã", "i", muertes.cr$regsalud)
-
-muertes.cr$regsalud <- gsub("i³", "o", muertes.cr$regsalud)
-
-muertes.cr$provincia <- gsub("Ã©", "e", muertes.cr$provincia)
-
-muertes.cr$provincia <- gsub("Ã³", "o", muertes.cr$provincia)
-
-muertes.cr$provocu <- gsub("Ã©", "e", muertes.cr$provocu)
-
-muertes.cr$provocu <- gsub("Ã³", "o", muertes.cr$provocu)
-
-muertes.cr$provregis <- gsub("Ã©", "e", muertes.cr$provregis)
-
-muertes.cr$provregis <- gsub("Ã³", "o", muertes.cr$provregis)
-
-muertes.cr$reginec <- gsub("Ã", "i", muertes.cr$reginec)
-
-muertes.cr$reginec <- gsub("i³", "o", muertes.cr$reginec)
-
-muertes.cr$edadsrec <- gsub("100 y mÃ¡s", "100 - 121", muertes.cr$edadsrec)
-
-muertes.cr$autopsia <- gsub("Ã©", "e", muertes.cr$autopsia)
-
-muertes.cr$autopsia <- gsub("Ã", "i", muertes.cr$autopsia)
-
-muertes.cr$asistmed <- gsub("Ã©", "e", muertes.cr$asistmed)
-
-muertes.cr$asistmed <- gsub("Ã", "i", muertes.cr$asistmed)
-
-muertes.cr$reginec <- gsub("Paci­fico", "Pacifico", muertes.cr$reginec)
-
-muertes.cr$regsalud <- gsub("Paci­fico", "Pacifico", muertes.cr$regsalud)
-```
-
-Se cambian las nacionalidades distintas a Costa Rica.
-
-```{r cambio_nacionalidades}
-muertes.cr$nacionalid <- gsub("^(?!Costa Rica$).*", "Extranjero", muertes.cr$nacionalid, perl = TRUE)
-```
-
-Debido a la baja cantidad de observaciones, en el estado civil se hará un grupo llamado “otros” para los que están en estado civil: ignorado, unión libre, menor y separado.
-
-```{r limpieza_civil}
-muertes.cr$estcivil <- gsub("Ignorado", "Otros", muertes.cr$estcivil)
-
-muertes.cr$estcivil <- gsub("Union libre", "Otros", muertes.cr$estcivil)
-
-muertes.cr$estcivil <- gsub("Separado", "Otros", muertes.cr$estcivil)
-
-muertes.cr$estcivil <- gsub("Menor", "Otros", muertes.cr$estcivil)
-```
-
-Nuevamente, por la baja cantidad de observaciones en algunas ocupaciones, se juntarán algunos grupos, en este caso se harán 2 grupos llamados “Trabajadores activos” y “Otros”, que contienen a las siguientes ocupaciones:
-
-Trabajadores activos: “Profesionales cientificos e intelectuales”, “Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros”, “Ocupaciones elementales”, “Trabajadores de los servicios y vendedores de comercios y mercados”, “Operadores de instalaciones y maquinas y ensambladores”, “Tecnicos y profesionales de nivel medio”, “Oficiales, operarios y artesanos de artes mecanicas y de otros oficios”, “Personal de apoyo administrativo” y “Directores y gerentes”.
-
-Otros: “Pensionado”, “Persona con discapacidad”, “Estudiante”, “Mal especificadas” y “Privado de libertad”.
-
-```{r limpieza_ocupaciones}
-# Grupo de Trabajadores activos
-muertes.cr$ocuparec <- gsub("Profesionales cienti­ficos e intelectuales", "Trabajadores activos", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros", "Trabajadores activos", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Ocupaciones elementales", "Trabajadores activos", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Trabajadores de los servicios y vendedores de comercios y mercados", "Trabajadores activos", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Operadores de instalaciones y maquinas y ensambladores", "Trabajadores activos", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Tecnicos y profesionales de nivel medio", "Trabajadores activos", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Oficiales, operarios y artesanos de artes mecanicas y de otros oficios", "Trabajadores activos", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Personal de apoyo administrativo", "Trabajadores activos", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Directores y gerentes", "Trabajadores activos", muertes.cr$ocuparec)
-
-# Grupo de Otros
-muertes.cr$ocuparec <- gsub("Pensionado", "Otros", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Persona con discapacidad", "Otros", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Estudiante", "Otros", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Mal especificadas", "Otros", muertes.cr$ocuparec)
-
-muertes.cr$ocuparec <- gsub("Privado de libertad", "Otros", muertes.cr$ocuparec)
-```
-
-Se eliminan algunas de las columnas que no se usarán para la base.
-
-```{r eliminar_columnas}
-library(dplyr)
-muertes.cr <- muertes.cr %>% 
-  select(-pc, -causamuer, -des_causa, -pcocu, -nacmadre, -pcregis, -gruposcb, -instmurio)
-```
-
 Se ordena la columna de grupo etario.
 
 ```{r ordenar_gretario}
-muertes.cr$edadsrec <- factor(muertes.cr$edadsrec, levels = c("15 - 19", "20 - 24", "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49", "50 - 54", "55 - 59", "60 - 64", "65 - 69", "70 - 74", "75 - 79", "80 - 84", "85 - 89", "90 - 94", "95 - 99", "100 - 121"))
+muertes.df$edadsrec <- factor(muertes.df$edadsrec, levels = c("15 - 19", "20 - 24", "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49", "50 - 54", "55 - 59", "60 - 64", "65 - 69", "70 - 74", "75 - 79", "80 - 84", "85 - 89", "90 - 94", "95 - 99", "100 - 121"))
 ```
 
 Con la limpieza realizada, se procede a realizar el ejercicio de los gráficos. Para esto se usó el paquete [furrr](https://furrr.futureverse.org), este permite realizar ciclos en paralelo, lo cual se puede observar que aumenta en gran medida la [eficiencia](https://github.com/victorcaquilpan/LecturaExcelConR). Se realizan gráficos de barras para las categóricas e histogramas para las numéricas.
@@ -178,7 +289,7 @@ library(furrr)
 library(future)
 
 # Definimos la cantidad de gráficos que vamos a generar
-num.graf <- ncol(muertes.cr)
+num.graf <- ncol(muertes.df)
 
 # Cargamos el plan para paralelizar
 plan(multisession)
@@ -203,14 +314,14 @@ fun.barras <- function(df, indice_col){
 indices.categoricos <- function(x) is.character(x) || is.factor(x)
 
 # Guardamos los índices correspondientes
-categoricos <- which(sapply(muertes.cr, indices.categoricos))
-numericos <- which(!sapply(muertes.cr, indices.categoricos))
+categoricos <- which(sapply(muertes.df, indices.categoricos))
+numericos <- which(!sapply(muertes.df, indices.categoricos))
 
 # Generamos los gráficos histogramas en paralelo
-future_map(numericos, ~ fun.histograma(muertes.cr, .x))
+future_map(numericos, ~ fun.histograma(muertes.df, .x))
 
 # Generamos los gráficos de barras en paralelo
-future_map(categoricos, ~ fun.barras(muertes.cr, .x))
+future_map(categoricos, ~ fun.barras(muertes.df, .x))
 ```
 
 Con lo anterior, probamos el tiempo que tardan las funciones.
@@ -220,7 +331,7 @@ Con lo anterior, probamos el tiempo que tardan las funciones.
 plan(multisession)
 
 # Tomamos los tiempos 10 veces e imprimimos los resultados
-(microbenchmark(future_map(numericos, ~ fun.histograma(muertes.cr, .x)), future_map(categoricos, ~ fun.barras(muertes.cr, .x)), times = 10))
+(microbenchmark(future_map(numericos, ~ fun.histograma(muertes.df, .x)), future_map(categoricos, ~ fun.barras(muertes.df, .x)), times = 10))
 ```
 
 Se realiza un DataFrame con el tiempo (en segundos) promedio de los histogramas y de los gráficos de barras respectivamente, cada integrante del grupo lo añade manualmente con los tiempos del chunk anterior.
@@ -229,8 +340,8 @@ Se realiza un DataFrame con el tiempo (en segundos) promedio de los histogramas 
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.graficos <- data.frame(
   integrante = c("Santiago", "Eyeri"),
-  histogramas = c(10.09174, 4.83059),
-  barras = c(20.44117, 8.06775)
+  histogramas = c(8.46395, 4.83059),
+  barras = c(13.31152, 8.06775)
 )
 ```
 
@@ -306,8 +417,7 @@ Así, se decidió que la mejor manera de hacer este ejercicio es hacerlo con lo 
 
 Si bien el tiempo de ejecución puede parecer alto, es lo mejor que se pudo encontrar que está a nuestro alcance.
 
-```{r}
-
+```{r ejercicio_matriz}
 library(microbenchmark)
 
 # Se definen las dimensiones de la matriz
@@ -323,65 +433,51 @@ operacion <- function(matriz){
 }
 
 # Por último se determina el tiempo promedio de ejecución (en segundos) de realizar el proceso 10 veces
-
-plan(multisession)
-
 (microbenchmark(operacion(matriz), times = 10))
 
 ```
 
-```{r}
-
+```{r tiempo_matrices}
 # Se guarda este tiempo por integrante en un dataframe
-tiempos.operaciones.matrices <- data.frame(integrante = c("Eyeri"), tiempo = c(5.068372))
-
+tiempos.matrices <- data.frame(
+  integrante = c("Eyeri", "Santiago"), 
+  tiempo = c(5.068372, 5.99183)
+  )
 ```
 
 ## Eliminación de columnas por porcentaje de valores nulos
 
 Similar al ejercicio de media móvil, se inicia descargando la base de datos y se modifica a un objeto de tipo data.table. Luego se crea la función que hace lo deseado y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
 
-```{r}
-
-library(microbenchmark)
+```{r ejercicio_elimcol}
 library(data.table)
 library(readxl)
 
 base.salarios <- read_excel("data/Base_salarios.xlsx")
 
-base.salarios <- setDT(base.salarios)
+# base.salarios <- setDT(base.salarios) # Próximamente se harán más pruebas con esto
 
 # Función que elimina las columnas de un dataframe en las cuales el porcentaje de valores nulos represanta un porcentaje mayor al indicado por el usuario
-eliminar.columnas <- function(df, porcentaje){
-  
-  filas <- length(df[[1]])
-  
+eliminar.columnas <- function(df, porcentaje) {
+  filas <- length(df[[1]]) # Probar nrow
   i <- 1
   
-  while(i <= length(df)){
-      
+  while (i <= length(df)) {
     cantidad_na <- sum(is.na(df[[i]]))
-      
-    if((cantidad_na / filas) > porcentaje){
-        
+    
+    if ((cantidad_na / filas) > porcentaje) {
       df <- subset(df, select = -i)
-        
     } # fin if
     
     i <- i + 1
-    
   } # fin while i
-  
   return(df)
-  
 }
-
 ```
 
 Prueba de la función y tiempo promedio de ejecución
 
-```{r}
-
+```{r tiempos_elimcol}
 prueba.1 <- eliminar.columnas(base.salarios, 0.1)
 
 # Como se puede ver, en ninguna columna del dataframe se presenta una cantidad de valores nulos mayor al 10%, por lo que se procede a probar la función con un porcentaje de 1% para que se eliminen al menos 2 columnas y se pueda ver mejor el tiempo de ejecución de la función
@@ -389,25 +485,13 @@ prueba.1 <- eliminar.columnas(base.salarios, 0.1)
 prueba.2 <- eliminar.columnas(base.salarios, 0.01)
 
 # Ahora se procede a determinar el tiempo promedio de ejecución (en segundos) de hacer el proceso 10 veces
-
-plan(multisession)
-
 (microbenchmark(eliminar.columnas(base.salarios, 0.01), times = 10))
-
 ```
 
 Por último, se hace un dataframe con los tiempos de ejecución de cada integrante
 
-```{r}
-
-tiempos.eliminar.columnas <- data.frame(integrante = c("Eyeri"), tiempo = c((741.48) / 1000))
-
+```{r df_elimcol}
+tiempos.eliminar.columnas <- data.frame(
+  integrante = c("Eyeri", "Santiago"), 
+  tiempo = c((741.48) / 1000, (766.26) / 1000000))
 ```
-
-
-
-
-
-
-
-
