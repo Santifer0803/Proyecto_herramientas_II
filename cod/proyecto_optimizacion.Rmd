@@ -493,6 +493,10 @@ Para este ejercicio, se incia realizando la imputación por agrupación de múlt
 
 ```{r funcion_agrupacion}
 library(data.table)
+library(readxl)
+
+base.salarios <- read_excel("data/Base_salarios.xlsx")
+
 microbenchmark(datatable = {
   # Se transforma a DataFrame
   base.dt <- setDT(base.salarios)
@@ -513,8 +517,11 @@ Se guardan los resultados en un DataFrame.
 
 ```{r tiempos_limpieza}
 tiempos.limpieza <- data.frame(
-  integrante = c("Santiago"),
-  con.datatable = c((3.04735) / 1000),
-  con.dplyr = c((7.28283) / 1000)
+  integrante = c("Santiago", "Eyeri"),
+  con.datatable = c((3.04735) / 1000, (4.2577) / 1000),
+  con.dplyr = c((7.28283) / 1000, (9.236) / 1000)
 )
 ```
+
+
+
