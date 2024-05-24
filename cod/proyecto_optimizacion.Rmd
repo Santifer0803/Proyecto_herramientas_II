@@ -20,6 +20,7 @@ Para poder utilizar el proyecto, se iniciará con la descarga de las librarías 
 # install.packages("future")
 # install.packages("furrr")
 # install.packages("data.table")
+# install.packages("tidyr")
 ```
 
 Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
@@ -54,6 +55,8 @@ matriz <- matrix(runif(n^2), n, n)
 
 ```
 
+Se guarda el tiempo de las matrices.
+
 ```{r tiempo_matrices}
 # Se guarda este tiempo por integrante en un dataframe
 tiempos.matrices <- data.frame(
@@ -61,6 +64,22 @@ tiempos.matrices <- data.frame(
   tiempo = c(4.246259, 5.99183, 7.257987, 7.87946)
   )
 ```
+
+Se grafica lo anterior.
+
+```{r tiempos_matrices}
+ggplot(tiempos.matrices, aes(x = integrante, y = tiempo)) +
+  geom_col(fill = "coral3") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos del ejercicio de matrices",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 
 ## Limpieza eficiente
 
@@ -302,6 +321,41 @@ tiempos.limpieza <- data.frame(
 )
 ```
 
+Se grafican los tiempos de la limpieza.
+
+```{r tiempo_limpieza}
+library(tidyr)
+# Convertir el formato de ancho a largo
+limpieza.largo <-
+  gather(tiempos.limpieza,
+         key = "condicion",
+         value = "tiempo",
+         -integrante)
+
+# Se diferencian las barras
+limpieza.largo$condicion <-
+  factor(
+    limpieza.largo$condicion,
+    levels = c("con.datatable", "sin.datatable"),
+    labels = c("Con datatable", "Sin datatable")
+  )
+
+ggplot(limpieza.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de limpieza de una base",
+    caption = "Fuente: elaboración propia"
+  ) +
+  scale_fill_manual(values = c(
+    "Con datatable" = "steelblue2",
+    "Sin datatable" = "brown3"
+  )) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 ## Gráficos en paralelo
 
 Se ordena la columna de grupo etario.
@@ -373,6 +427,39 @@ tiempos.graficos <- data.frame(
 )
 ```
 
+Se grafica lo anterior.
+
+```{r tiempo_graficos}
+graficos.largo <-
+  gather(tiempos.graficos,
+         key = "condicion",
+         value = "tiempo",
+         -integrante)
+
+# Se diferencian las barras
+graficos.largo$condicion <-
+  factor(
+    graficos.largo$condicion,
+    levels = c("histogramas", "barras"),
+    labels = c("Histogramas", "Gráficos de barras")
+  )
+
+ggplot(graficos.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de gráficos",
+    caption = "Fuente: elaboración propia"
+  ) +
+  scale_fill_manual(values = c(
+    "Histogramas" = "khaki3",
+    "Gráficos de barras" = "green3"
+  )) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 ## Media móvil
 
 Inicialmente, se descarga la base para reemplazar la media móvil en una de sus columnas. Para modificar esta base, se hará un objeto de tipo [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
@@ -434,6 +521,21 @@ tiempos.mediam <- data.frame(
 )
 ```
 
+En un gráfico.
+
+```{r grafico_mmovil}
+ggplot(tiempos.mediam, aes(x = integrante, y = media_movil)) +
+  geom_col(fill = "darkorchid2") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de imputación por media móvil",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 ## Eliminación de columnas por porcentaje de valores nulos
 
 Similar al ejercicio de media móvil, se inicia descargando la base de datos y se modifica a un objeto de tipo data.table. Luego se crea la función que hace lo deseado y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
@@ -486,6 +588,22 @@ tiempos.eliminar.columnas <- data.frame(
   )
 ```
 
+En gráfico.
+
+```{r grafico_elimcol}
+ggplot(tiempos.eliminar.columnas, aes(x = integrante, y = tiempo)) +
+  geom_col(fill = "darkolivegreen3") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de la eliminación de columnas",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
 ## Imputación por agrupación
 
 Para este ejercicio, se incia realizando la imputación por agrupación de múltiples maneras. Iniciando con data.table.
@@ -514,13 +632,44 @@ times = 10
 
 Se guardan los resultados en un DataFrame.
 
-```{r tiempos_limpieza}
-tiempos.limpieza <- data.frame(
+```{r tiempos_imputacion}
+tiempos.agrupacion <- data.frame(
   integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
   con.datatable = c((3.04735) / 1000, (4.2577) / 1000, (5.95827) / 1000 , (8.804151)/1000 ),
   con.dplyr = c((7.28283) / 1000, (9.236) / 1000, (15.76346) / 1000 , (21.437711) / 1000)
 )
 ```
 
+Con un gráfico.
 
+```{r grafico_imputacion}
+agrupacion.largo <-
+  gather(tiempos.agrupacion,
+         key = "condicion",
+         value = "tiempo",
+         -integrante)
+
+# Se diferencian las barras
+agrupacion.largo$condicion <-
+  factor(
+    agrupacion.largo$condicion,
+    levels = c("con.datatable", "con.dplyr"),
+    labels = c("Datatable", "Dplyr")
+  )
+
+ggplot(agrupacion.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de gráficos",
+    caption = "Fuente: elaboración propia"
+  ) +
+  scale_fill_manual(values = c(
+    "Datatable" = "darkslategray3",
+    "Dplyr" = "firebrick3"
+  )) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
