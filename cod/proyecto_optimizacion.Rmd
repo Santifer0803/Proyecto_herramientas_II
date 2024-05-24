@@ -517,9 +517,9 @@ Se guardan los resultados en un DataFrame.
 
 ```{r tiempos_limpieza}
 tiempos.limpieza <- data.frame(
-  integrante = c("Santiago", "Eyeri"),
-  con.datatable = c((3.04735) / 1000, (4.2577) / 1000),
-  con.dplyr = c((7.28283) / 1000, (9.236) / 1000)
+  integrante = c("Santiago", "Eyeri", "Paula"),
+  con.datatable = c((3.04735) / 1000, (4.2577) / 1000, (5.95827) / 1000 ),
+  con.dplyr = c((7.28283) / 1000, (9.236) / 1000, (15.76346) / 1000 )
 )
 ```
 
