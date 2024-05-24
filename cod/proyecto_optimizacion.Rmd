@@ -57,8 +57,8 @@ matriz <- matrix(runif(n^2), n, n)
 ```{r tiempo_matrices}
 # Se guarda este tiempo por integrante en un dataframe
 tiempos.matrices <- data.frame(
-  integrante = c("Eyeri", "Santiago", "Paula"), 
-  tiempo = c(4.246259, 5.99183, 7.257987)
+  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
+  tiempo = c(4.246259, 5.99183, 7.257987, 7.87946)
   )
 ```
 
@@ -73,7 +73,6 @@ Además, se usará [chartr](https://www.geeksforgeeks.org/substitute-characters-
 ```{r limpieza_datatable}
 library(data.table)
 muertes.original <- read_excel("data/muertes_en_costa_rica_2014_2021.xlsx")
-
 # Se toma el tiempo 10 veces
 (microbenchmark(con.datatable = {
   # Se pasan a data.table (se puede leer directamente, pero no admite carpetas)
@@ -297,9 +296,9 @@ Se guardan los resultados en un DataFrame.
 
 ```{r tiempos_limpieza}
 tiempos.limpieza <- data.frame(
-  integrante = c("Santiago","Paula", "Eyeri"),
-  con.datatable = c(3.05496, 7.309475, 4.02244),
-  sin.datatable = c(4.77649, 11.26839, 5.891517)
+  integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
+  con.datatable = c(3.05496, 7.309475, 4.02244, 8.529539),
+  sin.datatable = c(4.77649, 11.26839, 5.891517, 11.31008)
 )
 ```
 
@@ -368,9 +367,9 @@ Se realiza un DataFrame con el tiempo (en segundos) promedio de los histogramas 
 ```{r df_tiempos}
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.graficos <- data.frame(
-  integrante = c("Santiago", "Eyeri", "Paula"),
-  histogramas = c(8.46395, 4.682311, 8.531366),
-  barras = c(13.31152, 7.107419, 14.893497)
+  integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
+  histogramas = c(8.46395, 4.682311, 8.531366, 10.83528),
+  barras = c(13.31152, 7.107419, 14.893497, 16.36664)
 )
 ```
 
@@ -430,8 +429,8 @@ Hacemos el DataFrame con los valores promedio de cada integrante (fijarse en la 
 ```{r df_tiempos}
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.mediam <- data.frame(
-  integrante = c("Santiago", "Eyeri", "Paula"),
-  media_movil = c((3.15827) / 1000, (2.78863) / 1000, (10.75752) / 1000)
+  integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
+  media_movil = c((3.15827) / 1000, (2.78863) / 1000, (10.75752) / 1000, (30.66207)/ 1000)
 )
 ```
 
@@ -482,8 +481,8 @@ Por último, se hace un dataframe con los tiempos de ejecución de cada integran
 
 ```{r df_elimcol}
 tiempos.eliminar.columnas <- data.frame(
-  integrante = c("Eyeri", "Santiago", "Paula"), 
-  tiempo = c((975.28) / 1000000, (766.26) / 1000000, (3569.87) / 1000000)
+  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
+  tiempo = c((975.28) / 1000000, (766.26) / 1000000, (3569.87) / 1000000, (5.604471)/1000 )
   )
 ```
 
@@ -517,9 +516,9 @@ Se guardan los resultados en un DataFrame.
 
 ```{r tiempos_limpieza}
 tiempos.limpieza <- data.frame(
-  integrante = c("Santiago", "Eyeri", "Paula"),
-  con.datatable = c((3.04735) / 1000, (4.2577) / 1000, (5.95827) / 1000 ),
-  con.dplyr = c((7.28283) / 1000, (9.236) / 1000, (15.76346) / 1000 )
+  integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
+  con.datatable = c((3.04735) / 1000, (4.2577) / 1000, (5.95827) / 1000 , (8.804151)/1000 ),
+  con.dplyr = c((7.28283) / 1000, (9.236) / 1000, (15.76346) / 1000 , (21.437711) / 1000)
 )
 ```
 
