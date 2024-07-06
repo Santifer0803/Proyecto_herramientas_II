@@ -14,6 +14,7 @@ Para poder utilizar el proyecto, se iniciará con la descarga de las librarías 
 # install.packages("ggplot2")
 # install.packages("dplyr")
 # install.packages("readxl")
+# install.packages("readr")
 
 # Librerías menos comunes
 # install.packages("microbenchmark")
@@ -21,6 +22,7 @@ Para poder utilizar el proyecto, se iniciará con la descarga de las librarías 
 # install.packages("furrr")
 # install.packages("data.table")
 # install.packages("tidyr")
+# install.packages("stringi")
 ```
 
 Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
@@ -34,7 +36,9 @@ pacman::p_load(microbenchmark,
                tidyr,
                data.table,
                furrr,
-               future
+               future,
+               readr,
+               stringi
                )
 ```
 
@@ -993,3 +997,157 @@ ggplot(tiempos.estocast, aes(x = integrante, y = tiempo)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+## Producto acumulado
+
+```{r producto acumulado usando cumprod}
+acumulado.cumprod <- function(vector) {
+  return(cumprod(vector))
+}
+
+```
+
+```{r prueba cumprod}
+microbenchmark(acumulado.cumprod(runif(
+  100000, min = .Machine$double.eps, max = 2
+)), times = 10, unit = "seconds")
+```
+
+```{r producto acumulado usando sapply}
+acumulado.sapply <- function(vector) {
+  return(sapply(1:length(vector), function(i)
+    prod(vector[1:i])))
+  
+}
+```
+
+```{r prueba sapply}
+microbenchmark(acumulado.sapply(runif(
+  100000, min = .Machine$double.eps, max = 2
+)), times = 10, unit = "seconds")
+```
+
+```{r tiempos producto acumulado}
+
+tiempos.producto.acumulado <- data.frame(
+  integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
+  cumprod = c(0, 0.00997996, 0, 0),
+  sapply = c(0, 44.53777	, 0, 0)
+)
+
+```
+
+## Cifrado César
+
+```{r cargar archivo.txt para el cifrado cesar}
+principito <- read_file("el_principito.txt")
+```
+
+```{r cifrado cesar usando chartr}
+cifrado.chartr <- function(texto, desplazamiento) {
+  # Definir el alfabeto
+  alfabeto_minusculas <- "abcdefghijklmnopqrstuvwxyz"
+  alfabeto_mayusculas <- "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  
+  # Crear el alfabeto desplazado
+  alfabeto_minusculas_desplazado <- paste0(
+    substr(
+      alfabeto_minusculas,
+      desplazamiento + 1,
+      nchar(alfabeto_minusculas)
+    ),
+    substr(alfabeto_minusculas, 1, desplazamiento)
+  )
+  
+  alfabeto_mayusculas_desplazado <- paste0(
+    substr(
+      alfabeto_mayusculas,
+      desplazamiento + 1,
+      nchar(alfabeto_mayusculas)
+    ),
+    substr(alfabeto_mayusculas, 1, desplazamiento)
+  )
+  
+  # cambiar las letras
+  texto_cifrado <- chartr(
+    paste0(alfabeto_minusculas, alfabeto_mayusculas),
+    paste0(
+      alfabeto_minusculas_desplazado,
+      alfabeto_mayusculas_desplazado
+    ),
+    texto
+  )
+  
+  return(texto_cifrado)
+}
+
+```
+
+```{r prueba chartr}
+microbenchmark(cifrado.chartr(principito, 5), times = 10, unit = "seconds")
+```
+
+```{r cifrado cesar usando stringi}
+cifrado.stringi <- function(texto, desplazamiento) {
+  # Función para desplazar letras
+  desplazar <- function(letra, desplazamiento) {
+    if (stri_detect_regex(letra, "[a-z]")) {
+      return(stri_sub(
+        "abcdefghijklmnopqrstuvwxyz",
+        #usar modulo 26
+        (
+          stri_locate_all_fixed("abcdefghijklmnopqrstuvwxyz", letra)[[1]][1, 1] +
+            desplazamiento - 1
+        ) %% 26 + 1,
+        (
+          stri_locate_all_fixed("abcdefghijklmnopqrstuvwxyz", letra)[[1]][1, 1] +
+            desplazamiento - 1
+        ) %% 26 + 1
+      ))
+    } else if (stri_detect_regex(letra, "[A-Z]")) {
+      return(stri_sub(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        (
+          stri_locate_all_fixed("ABCDEFGHIJKLMNOPQRSTUVWXYZ", letra)[[1]][1, 1] +
+            desplazamiento - 1
+        ) %% 26 + 1,
+        (
+          stri_locate_all_fixed("ABCDEFGHIJKLMNOPQRSTUVWXYZ", letra)[[1]][1, 1] +
+            desplazamiento - 1
+        ) %% 26 + 1
+      ))
+    } else {
+      return(letra)
+    }
+  }
+  
+  # Desplazar cada letra del texto y unirlas
+  texto_cifrado <- stri_join(
+    sapply(
+      stri_split_boundaries(texto, type = "character")[[1]],
+      desplazar,
+      desplazamiento = desplazamiento
+    ),
+    collapse = ""
+  )
+  
+  return(texto_cifrado)
+}
+
+```
+
+```{r prueba stringi}
+microbenchmark(cifrado.stringi(principito, 5), times = 10, unit = "seconds")
+```
+
+```{r tiempos cifrado cesar}
+tiempos.cifrado.cesar <- data.frame(
+  integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
+  chartr = c(0, 0.02062909, 0, 0),
+  stringi = c(0, 2.459928	, 0, 0)
+)
+```
+
+
+
+
+
