@@ -1,0 +1,1224 @@
+---
+title: "Proyecto_optimizacion"
+author: "Grupo optimización"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Proyecto grupal CA-0305
+
+Para poder utilizar el proyecto, se iniciará con la descarga de las librarías que se utilizaron (Se pondrán como un comentario ya que cada persona puede tener alguna de estas librerías, de esta manera se podrán elegir las que no se tengan individualmente).
+
+```{r librerias_necesarias}
+# Librerías comunes
+# install.packages("ggplot2")
+# install.packages("dplyr")
+# install.packages("readxl")
+# install.packages("readr")
+
+# Librerías menos comunes
+# install.packages("microbenchmark")
+# install.packages("future")
+# install.packages("furrr")
+# install.packages("data.table")
+# install.packages("tidyr")
+# install.packages("stringi")
+```
+
+Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
+
+```{r librerias_generales}
+pacman::p_load(microbenchmark,
+               ggplot2,
+               dplyr,
+               readxl,
+               utils,
+               tidyr,
+               data.table,
+               furrr,
+               future,
+               readr,
+               stringi
+               )
+```
+
+## Operaciones matriciales
+
+Inicialmente se intentaron usar librerías como Matrix, bigmemory, LAPLACK, BLAS, bigalgebra o expm, pero algunas de estas requieren de una instalación externa y más compleja que una librería común y corriente, además de que dichas librerías no optimizan la multiplicación elemento a elemento sino que optimizan el calculo matricial de matrices, o se especializan en otros tipos de procedimientos con matrices, lo cual no es lo que se quiere en este ejercicio.
+
+Esto quiere decir que, por ejemplo, al hacer A %^% 2 o, lo que es lo mismo, A %*% A, se hace la multiplicación matricial de A con A y no la multiplicación elemento a elemento de A con A, que es lo deseado. También se intentó paralelizar el código usando las librerías doParallel y foreach, pero resultó ser bastante más ineficiente hacer esto que hacerlo por defecto.
+
+Así, se decidió que la mejor manera de hacer este ejercicio es hacerlo con lo que trae R por defecto; es decir, crear una matriz con matrix() y utilizar el operador ^ para elevar a la 100 elemento a elemento, así como * y + para multiplicarla por 10 y sumarle 5, respectivamente.
+
+Si bien el tiempo de ejecución puede parecer alto, es lo mejor que se pudo encontrar que está a nuestro alcance.
+
+```{r ejercicio_matriz}
+
+# Se definen las dimensiones de la matriz
+n <- 10000
+
+# Se crea la matriz con las dimensiones deseadas
+matriz <- matrix(runif(n^2), n, n)
+
+# Por último se determina el tiempo promedio de ejecución (en segundos) de realizar el proceso 10 veces
+(microbenchmark(((matriz ^ 100) * 10) + 5, times = 10))
+
+```
+
+Se guarda el tiempo de las matrices.
+
+```{r tiempos_matrices}
+# Se guarda este tiempo por integrante en un dataframe
+tiempos.matrices <- data.frame(
+  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
+  tiempo = c(4.246259, 5.99183, 7.257987, 7.87946)
+  )
+```
+
+Se grafica lo anterior.
+
+```{r graf_tiempos_matrices}
+ggplot(tiempos.matrices, aes(x = integrante, y = tiempo)) +
+  geom_col(fill = "coral3") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos del ejercicio de matrices",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Limpieza eficiente
+
+Inicialmente, se procede a descargar la base de datos a utilizar para generar los gráfico, para esto se pondrá en formato [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
+
+Los data.table tienen un operador muy importante que es el [:=](https://stackoverflow.com/questions/7029944/when-should-i-use-the-operator-in-data-table), lo cual mejora en gran medida la eficiencia de muchas operciones.
+
+Además, se usará [chartr](https://www.geeksforgeeks.org/substitute-characters-of-a-string-in-r-programming-chartr-function/) para modificar los caracteres únicos requeridos, pues esta función está optimizada para ese proceso.
+
+```{r limpieza_datatable}
+muertes.original <- read_excel("data/muertes_en_costa_rica_2014_2021.xlsx")
+# Se toma el tiempo 10 veces
+(microbenchmark(con.datatable = {
+  # Se pasan a data.table (se puede leer directamente, pero no admite carpetas)
+  muertes.dt <- setDT(muertes.original)
+  
+  # Se filtra por edades mayores o iguales a 15 y años mayores o iguales a 2014
+  muertes.dt <-
+    muertes.dt[edads >= 15 &
+                 anodef >= 2014 &
+                 anotrab >= 2014 & anodeclara >= 2014]
+  
+  # Correcciones ortográficas con chartr y el operador :=
+  muertes.dt[, ocuparec := chartr("Ã", "i", ocuparec)]
+  muertes.dt[, regsalud := chartr("Ã", "i", regsalud)]
+  muertes.dt[, reginec := chartr("Ã", "i", reginec)]
+  muertes.dt[, autopsia := chartr("Ã", "i", autopsia)]
+  muertes.dt[, asistmed := chartr("Ã", "i", asistmed)]
+  
+  # Correcciones ortográficas con gsub y el operador :=
+  muertes.dt[, estcivil := gsub("Ã³", "o", estcivil)]
+  muertes.dt[, regsalud := gsub("Ã³", "o", regsalud)]
+  muertes.dt[, provincia := gsub("Ã³", "o", provincia)]
+  muertes.dt[, provocu := gsub("Ã³", "o", provocu)]
+  muertes.dt[, provregis := gsub("Ã³", "o", provregis)]
+  muertes.dt[, reginec := gsub("Ã³", "o", reginec)]
+  muertes.dt[, ocuparec := gsub("Ã¡", "a", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Ã©", "e", ocuparec)]
+  muertes.dt[, provincia := gsub("Ã©", "e", provincia)]
+  muertes.dt[, provocu := gsub("Ã©", "e", provocu)]
+  muertes.dt[, provregis := gsub("Ã©", "e", provregis)]
+  muertes.dt[, autopsia := gsub("Ã©", "e", autopsia)]
+  muertes.dt[, asistmed := gsub("Ã©", "e", asistmed)]
+  muertes.dt[, nacionalid := gsub("^(?!Costa Rica$).*", "Extranjero", nacionalid, perl = TRUE)]
+  muertes.dt[, reginec := gsub("Paci­fico", "Pacifico", reginec)]
+  muertes.dt[, regsalud := gsub("Paci­fico", "Pacifico", regsalud)]
+  muertes.dt[, estcivil := gsub("Ignorado", "Otros", estcivil)]
+  muertes.dt[, estcivil := gsub("Union libre", "Otros", estcivil)]
+  muertes.dt[, estcivil := gsub("Separado", "Otros", estcivil)]
+  muertes.dt[, estcivil := gsub("Menor", "Otros", estcivil)]
+  muertes.dt[, edadsrec := gsub("100 y mÃ¡s", "100 - 121", edadsrec)]
+  muertes.dt[, ocuparec := gsub("Profesionales cienti­ficos e intelectuales",
+                                "Trabajadores activos",
+                                ocuparec)]
+  muertes.dt[, ocuparec := gsub(
+    "Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros",
+    "Trabajadores activos",
+    "Trabajadores activos",
+    ocuparec
+  )]
+  muertes.dt[, ocuparec := gsub(
+    "Trabajadores de los servicios y vendedores de comercios y mercados",
+    "Trabajadores activos",
+    ocuparec
+  )]
+  muertes.dt[, ocuparec := gsub("Ocupaciones elementales", "Trabajadores activos", ocuparec)]
+  muertes.dt[, ocuparec := gsub(
+    "Operadores de instalaciones y maquinas y ensambladores",
+    "Trabajadores activos",
+    ocuparec
+  )]
+  muertes.dt[, ocuparec := gsub("Tecnicos y profesionales de nivel medio",
+                                "Trabajadores activos",
+                                ocuparec)]
+  muertes.dt[, ocuparec := gsub(
+    "Oficiales, operarios y artesanos de artes mecanicas y de otros oficios",
+    "Trabajadores activos",
+    ocuparec
+  )]
+  muertes.dt[, ocuparec := gsub("Personal de apoyo administrativo",
+                                "Trabajadores activos",
+                                ocuparec)]
+  muertes.dt[, ocuparec := gsub("Directores y gerentes", "Trabajadores activos", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Pensionado", "Otros", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Persona con discapacidad", "Otros", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Estudiante", "Otros", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Mal especificadas", "Otros", ocuparec)]
+  muertes.dt[, ocuparec := gsub("Privado de libertad", "Otros", ocuparec)]
+  
+  # Eliminación de columnas
+  muertes.dt[, c(
+    "pc",
+    "causamuer",
+    "des_causa",
+    "pcocu",
+    "nacmadre",
+    "pcregis",
+    "gruposcb",
+    "instmurio"
+  ) := NULL]
+}, 
+times = 10))
+```
+
+Se realiza el mismo proceso con DataFrames.
+
+```{r limpieza_df}
+# Se toma el tiempo con DataFrames
+microbenchmark(sin.datatable = {
+  # Se crea una copia para que haga el proceso correctamente en cada iteración
+  muertes.df <- muertes.original
+  
+  # Se filtra por edades mayores o iguales a 15 y años mayores o iguales a 2014
+  muertes.df <- muertes.df[muertes.df$edads >= 15,]
+  muertes.df <- muertes.df[muertes.df$anodef >= 2014,]
+  muertes.df <- muertes.df[muertes.df$anotrab >= 2014,]
+  muertes.df <- muertes.df[muertes.df$anodeclara >= 2014,]
+  
+  # Correcciones ortográficas con chartr
+  muertes.df$ocuparec <- chartr("Ã", "i", muertes.df$ocuparec)
+  muertes.df$regsalud <- chartr("Ã", "i", muertes.df$regsalud)
+  muertes.df$reginec <- chartr("Ã", "i", muertes.df$reginec)
+  muertes.df$autopsia <- chartr("Ã", "i", muertes.df$autopsia)
+  muertes.df$asistmed <- chartr("Ã", "i", muertes.df$asistmed)
+  
+  # Correcciones ortográficas con gsub
+  muertes.df$estcivil <- gsub("Ã³", "o", muertes.df$estcivil)
+  muertes.df$ocuparec <- gsub("Ã¡", "a", muertes.df$ocuparec)
+  muertes.df$ocuparec <- gsub("Ã©", "e", muertes.df$ocuparec)
+  muertes.df$regsalud <- gsub("i³", "o", muertes.df$regsalud)
+  muertes.df$provincia <- gsub("Ã©", "e", muertes.df$provincia)
+  muertes.df$provincia <- gsub("Ã³", "o", muertes.df$provincia)
+  muertes.df$provocu <- gsub("Ã©", "e", muertes.df$provocu)
+  muertes.df$provocu <- gsub("Ã³", "o", muertes.df$provocu)
+  muertes.df$provregis <- gsub("Ã©", "e", muertes.df$provregis)
+  muertes.df$provregis <- gsub("Ã³", "o", muertes.df$provregis)
+  muertes.df$reginec <- gsub("i³", "o", muertes.df$reginec)
+  muertes.df$edadsrec <-
+    gsub("100 y mÃ¡s", "100 - 121", muertes.df$edadsrec)
+  muertes.df$autopsia <- gsub("Ã©", "e", muertes.df$autopsia)
+  muertes.df$asistmed <- gsub("Ã©", "e", muertes.df$asistmed)
+  muertes.df$reginec <-
+    gsub("Paci­fico", "Pacifico", muertes.df$reginec)
+  muertes.df$regsalud <-
+    gsub("Paci­fico", "Pacifico", muertes.df$regsalud)
+  muertes.df$nacionalid <-
+    gsub("^(?!Costa Rica$).*",
+         "Extranjero",
+         muertes.df$nacionalid,
+         perl = TRUE)
+  muertes.df$estcivil <-
+    gsub("Ignorado", "Otros", muertes.df$estcivil)
+  muertes.df$estcivil <-
+    gsub("Union libre", "Otros", muertes.df$estcivil)
+  muertes.df$estcivil <-
+    gsub("Separado", "Otros", muertes.df$estcivil)
+  muertes.df$estcivil <- gsub("Menor", "Otros", muertes.df$estcivil)
+  muertes.df$ocuparec <-
+    gsub(
+      "Profesionales cienti­ficos e intelectuales",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub(
+      "Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub("Ocupaciones elementales",
+         "Trabajadores activos",
+         muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub(
+      "Trabajadores de los servicios y vendedores de comercios y mercados",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub(
+      "Operadores de instalaciones y maquinas y ensambladores",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub(
+      "Tecnicos y profesionales de nivel medio",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub(
+      "Oficiales, operarios y artesanos de artes mecanicas y de otros oficios",
+      "Trabajadores activos",
+      muertes.df$ocuparec
+    )
+  muertes.df$ocuparec <-
+    gsub("Personal de apoyo administrativo",
+         "Trabajadores activos",
+         muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Directores y gerentes",
+         "Trabajadores activos",
+         muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Pensionado", "Otros", muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Persona con discapacidad", "Otros", muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Estudiante", "Otros", muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Mal especificadas", "Otros", muertes.df$ocuparec)
+  muertes.df$ocuparec <-
+    gsub("Privado de libertad", "Otros", muertes.df$ocuparec)
+  
+  # Eliminación de columnas
+  muertes.df <- muertes.df %>%
+    select(-pc,
+           -causamuer,
+           -des_causa,
+           -pcocu,
+           -nacmadre,
+           -pcregis,
+           -gruposcb,
+           -instmurio)
+},
+times = 10)
+```
+
+Se guardan los resultados en un DataFrame.
+
+```{r tiempos_limpieza}
+tiempos.limpieza <- data.frame(
+  integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
+  con.datatable = c(3.05496, 7.309475, 4.02244, 8.529539),
+  sin.datatable = c(4.77649, 11.26839, 5.891517, 11.31008)
+)
+```
+
+Se grafican los tiempos de la limpieza.
+
+```{r graf_tiempos_limpieza}
+# Convertir el formato de ancho a largo
+limpieza.largo <-
+  gather(tiempos.limpieza,
+         key = "condicion",
+         value = "tiempo",
+         -integrante)
+
+# Se diferencian las barras
+limpieza.largo$condicion <-
+  factor(
+    limpieza.largo$condicion,
+    levels = c("con.datatable", "sin.datatable"),
+    labels = c("Con datatable", "Sin datatable")
+  )
+
+ggplot(limpieza.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de limpieza de una base",
+    caption = "Fuente: elaboración propia"
+  ) +
+  scale_fill_manual(values = c(
+    "Con datatable" = "steelblue2",
+    "Sin datatable" = "brown3"
+  )) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Gráficos en paralelo
+
+Se ordena la columna de grupo etario.
+
+```{r ordenar_rango_etario}
+muertes.df$edadsrec <- factor(muertes.df$edadsrec, levels = c("15 - 19", "20 - 24", "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49", "50 - 54", "55 - 59", "60 - 64", "65 - 69", "70 - 74", "75 - 79", "80 - 84", "85 - 89", "90 - 94", "95 - 99", "100 - 121"))
+```
+
+Con la limpieza realizada, se procede a realizar el ejercicio de los gráficos. Para esto se usó el paquete [furrr](https://furrr.futureverse.org), este permite realizar ciclos en paralelo, lo cual se puede observar que aumenta en gran medida la [eficiencia](https://github.com/victorcaquilpan/LecturaExcelConR). Se realizan gráficos de barras para las categóricas e histogramas para las numéricas.
+
+```{r graficos_paralelo}
+# Definimos la cantidad de gráficos que vamos a generar
+num.graf <- ncol(muertes.df)
+
+# Cargamos el plan para paralelizar
+plan(multisession)
+
+# Definimos las funciones que generen los gráficos deseados
+
+#' Función que genera un histograma a partir de una columna específica de un DataFrame.
+#' 
+#' @param df DataFrame que contiene los datos.
+#' @param indice_col Índice de la columna o nombre de columna que se utilizará para 
+#' generar el histograma.
+#' 
+#' @return No retorna nada. Genera y muestra un objeto ggplot que representa el 
+#' histograma de la columna especificada.
+fun.histograma <- function(df, indice_col){
+  ggplot(data.frame(valor = df[[indice_col]]), aes(x = valor)) +
+    geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+    labs(y = "Frecuencia", caption = "Fuente: elaboración propia") +
+    theme_minimal()
+}
+
+#' Función que genera un gráfico de barras a partir de una columna específica de 
+#' un DataFrame.
+#' 
+#' @param df DataFrame que contiene los datos.
+#' @param indice_col Índice de la columna o nombre de columna que se utilizará para 
+#' generar el gráfico.
+#' 
+#' @return No retorna nada. Genera y muestra un objeto ggplot que representa el 
+#' gráfico de barras de la columna especificada.
+fun.barras <- function(df, indice_col){
+  ggplot(data.frame(valor = df[[indice_col]]), aes(x = valor)) +
+    geom_bar(fill = "skyblue") +
+    labs(y = "Cantidad", caption = "Fuente: elaboración propia") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+#' Función que determina si una columna es categórica.
+#' 
+#' @param x Vector o columna del dataframe a evaluar.
+#' 
+#' @return \code{TRUE} si la columna es de tipo \code{character} o \code{factor}, 
+#' \code{FALSE} en caso contrario.
+indices.categoricos <- function(x) is.character(x) || is.factor(x)
+
+# Guardamos los índices correspondientes
+categoricos <- which(sapply(muertes.df, indices.categoricos))
+numericos <- which(!sapply(muertes.df, indices.categoricos))
+
+# Generamos los gráficos histogramas en paralelo
+future_map(numericos, ~ fun.histograma(muertes.df, .x))
+
+# Generamos los gráficos de barras en paralelo
+future_map(categoricos, ~ fun.barras(muertes.df, .x))
+```
+
+Con lo anterior, probamos el tiempo que tardan las funciones.
+
+```{r tiempo_graficos}
+# Cargamos el plan para paralelizar
+plan(multisession)
+
+# Tomamos los tiempos 10 veces e imprimimos los resultados
+(microbenchmark(future_map(numericos, ~ fun.histograma(muertes.df, .x)), future_map(categoricos, ~ fun.barras(muertes.df, .x)), times = 10))
+```
+
+Se realiza un DataFrame con el tiempo (en segundos) promedio de los histogramas y de los gráficos de barras respectivamente, cada integrante del grupo lo añade manualmente con los tiempos del chunk anterior.
+
+```{r df_tiempos_graficos}
+# Dentro de los mismos vectores, se agregan los demás datos
+tiempos.graficos <- data.frame(
+  integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
+  histogramas = c(8.46395, 4.682311, 8.531366, 10.83528),
+  barras = c(13.31152, 7.107419, 14.893497, 16.36664)
+)
+```
+
+Se grafica lo anterior.
+
+```{r graf_tiempos_graficos}
+graficos.largo <-
+  gather(tiempos.graficos,
+         key = "condicion",
+         value = "tiempo",
+         -integrante)
+
+# Se diferencian las barras
+graficos.largo$condicion <-
+  factor(
+    graficos.largo$condicion,
+    levels = c("histogramas", "barras"),
+    labels = c("Histogramas", "Gráficos de barras")
+  )
+
+ggplot(graficos.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de gráficos",
+    caption = "Fuente: elaboración propia"
+  ) +
+  scale_fill_manual(values = c(
+    "Histogramas" = "khaki3",
+    "Gráficos de barras" = "green3"
+  )) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Media móvil
+
+Inicialmente, se descarga la base para reemplazar la media móvil en una de sus columnas. Para modificar esta base, se hará un objeto de tipo [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
+
+```{r dascarga_salarios}
+# Se descargan los datos normalmente
+base.salarios <- read_excel("data/Base_salarios.xlsx")
+
+# Se pasan a data.table
+base.salarios <- setDT(base.salarios)
+```
+
+Con el objeto necesario, se probará un método manual, pues las funciones existentes devuelven aún más nulos de los que hay en el vector original. Para realizar este proceso más rápido se probó a paralelizar el código, pero esto resultó más ineficiente que la versión final.
+
+```{r media_movil}
+# Se hace una copia de la columna a copiar
+copia.col <- base.salarios$`Salario base`
+
+#' Función que imputa los valores nulos de una columna de un DataFrame o un vector 
+#' usando la media móvil.
+#' 
+#' @param col.nulos Vector o columna de un DataFrame que contiene los valores nulos 
+#' a imputar.
+#' @param banda Número entero que representa el número de elementos adyacentes a 
+#' considerar para calcular la media móvil.
+#' 
+#' @return Vector o columna del DataFrame con los valores nulos imputados usando la media móvil.
+media.movil <- function(col.nulos, banda) {
+  # Se obtinenen los índices de los valores nulos y la cantidad de filas
+  indices.nulos <- which(is.na(base.salarios$`Salario base`))
+  filas <- length(col.nulos)
+  
+  # Iteramos a través de los nulos
+  for (i in indices.nulos) {
+    # Se obtiene el vector alrededor del valor a imputar
+    vec.num <-
+      c(col.nulos[max(1, (i - banda)):(i - 1)], (i + 1):min(filas, (i + banda)))
+    
+    # Se sustituye el valor por el promedio del vector anterior, ignorando los nulos
+    col.nulos[i] <- mean(vec.num, na.rm = TRUE)
+  }
+  return(col.nulos)
+}
+
+# Prueba de la función
+(sum(is.na(media.movil(copia.col, 4))))
+
+# La variable original sigue sin alterarse, solo se modifica localmente
+(sum(is.na(copia.col)))
+```
+
+Con la función anterior, se realizan 10 simulaciones para ver su tiempo promedio.
+
+```{r tiempo_media_movil}
+(microbenchmark(media.movil(copia.col, 5), times = 10))
+```
+
+Hacemos el DataFrame con los valores promedio de cada integrante (fijarse en la unidad de tiempo, pues los datos son en segundos).
+
+```{r df_tiempos_media_movil}
+# Dentro de los mismos vectores, se agregan los demás datos
+tiempos.mediam <- data.frame(
+  integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
+  media_movil = c((3.15827) / 1000, (2.78863) / 1000, (10.75752) / 1000, (30.66207)/ 1000)
+)
+```
+
+En un gráfico.
+
+```{r graf_tiempos_media_movil}
+ggplot(tiempos.mediam, aes(x = integrante, y = media_movil)) +
+  geom_col(fill = "darkorchid2") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de imputación por media móvil",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Eliminación de columnas por porcentaje de valores nulos
+
+Similar al ejercicio de media móvil, se inicia descargando la base de datos y se modifica a un objeto de tipo data.table. Luego se crea la función que hace lo deseado y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
+
+```{r eliminar_cols}
+base.salarios <- read_excel("data/Base_salarios.xlsx")
+
+#' Función que elimina las columnas de un DataFrame en las cuales el porcentaje
+#' de valores nulos supera un porcentaje especificado por el usuario.
+#' 
+#' @param df DataFrame del que se quiere eliminar las columnas.
+#' @param porcentaje Número entre 0 y 1 que indica el porcentaje máximo
+#'                   de valores nulos permitido en una columna. Las columnas con
+#'                   un porcentaje de valores nulos mayor que este valor serán eliminadas.
+#'                   
+#' @return DataFrame con las columnas que no superan el porcentaje especificado
+#'         de valores nulos.
+eliminar.columnas <- function(df, porcentaje) {
+  filas <- nrow(df)
+  i <- 1
+  
+  while (i <= length(df)) {
+    cantidad_na <- sum(is.na(df[[i]]))
+    
+    if ((cantidad_na / filas) > porcentaje) {
+      df <- subset(df, select = -i)
+    } # fin if
+    
+    i <- i + 1
+  } # fin while i
+  return(df)
+}
+```
+
+Prueba de la función y tiempo promedio de ejecución.
+
+```{r tiempos_eliminar_cols}
+prueba.1 <- eliminar.columnas(base.salarios, 0.1)
+
+# Como se puede ver, en ninguna columna del dataframe se presenta una cantidad de valores nulos mayor al 10%, por lo que se procede a probar la función con un porcentaje de 1% para que se eliminen al menos 2 columnas y se pueda ver mejor el tiempo de ejecución de la función
+
+prueba.2 <- eliminar.columnas(base.salarios, 0.01)
+
+# Ahora se procede a determinar el tiempo promedio de ejecución (en segundos) de hacer el proceso 10 veces
+(microbenchmark(eliminar.columnas(base.salarios, 0.01), times = 10))
+```
+
+Por último, se hace un DataFrame con los tiempos de ejecución de cada integrante.
+
+```{r df_tiempos_eliminar_cols}
+tiempos.eliminar.columnas <- data.frame(
+  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
+  tiempo = c((975.28) / 1000000, (766.26) / 1000000, (3569.87) / 1000000, (5.604471)/1000 )
+  )
+```
+
+En gráfico.
+
+```{r graf_eliminar_cols}
+ggplot(tiempos.eliminar.columnas, aes(x = integrante, y = tiempo)) +
+  geom_col(fill = "darkolivegreen3") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de la eliminación de columnas",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Imputación por agrupación
+
+Para este ejercicio, se incia realizando la imputación por agrupación de múltiples maneras. Iniciando con data.table.
+
+```{r imputacion_agrupacion}
+base.salarios <- read_excel("data/Base_salarios.xlsx")
+
+microbenchmark(datatable = {
+  # Se transforma a DataFrame
+  base.dt <- setDT(base.salarios)
+  
+  # Se imputan los valores
+  res.dt <- base.dt[, `Salario base` := ifelse(is.na(`Salario base`), mean(`Salario base`, na.rm = TRUE), `Salario base`), by = .(Género, `Grado de estudio`)]
+},
+dplyr = {
+  res.dp <- base.salarios %>% 
+    group_by(Género, `Grado de estudio`) %>% 
+    mutate(`Salario base` = ifelse(is.na(`Salario base`), mean(`Salario base`, na.rm = TRUE), `Salario base`))
+},
+times = 10
+)
+```
+
+Se guardan los resultados en un DataFrame.
+
+```{r tiempos_imputacion}
+tiempos.agrupacion <- data.frame(
+  integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
+  con.datatable = c((3.04735) / 1000, (4.2577) / 1000, (5.95827) / 1000 , (8.804151)/1000 ),
+  con.dplyr = c((7.28283) / 1000, (9.236) / 1000, (15.76346) / 1000 , (21.437711) / 1000)
+)
+```
+
+Con un gráfico.
+
+```{r graf_imputacion}
+agrupacion.largo <-
+  gather(tiempos.agrupacion,
+         key = "condicion",
+         value = "tiempo",
+         -integrante)
+
+# Se diferencian las barras
+agrupacion.largo$condicion <-
+  factor(
+    agrupacion.largo$condicion,
+    levels = c("con.datatable", "con.dplyr"),
+    labels = c("Datatable", "Dplyr")
+  )
+
+ggplot(agrupacion.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de gráficos",
+    caption = "Fuente: elaboración propia"
+  ) +
+  scale_fill_manual(values = c(
+    "Datatable" = "darkslategray3",
+    "Dplyr" = "firebrick3"
+  )) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Regresión logística
+
+Inicialmente, descargamos los datos con los que se hará la regresión logística.
+
+```{r descarga_diabetes}
+datos.diabetes <- read.csv("data/Diabetes.txt")
+```
+
+Se proceden a crear las funciones necesarias, iniciando con la función de optimización.
+
+```{r fun_optim}
+#' Función que realiza la optimización de los pesos (\code{W}) y el sesgo (\code{b}) 
+#' mediante el algoritmo de descenso del gradiente.
+#'
+#' @param W Vector de pesos.
+#' @param b Escalar que representa el sesgo.
+#' @param X Matriz de características de entrada.
+#' @param y Vector de etiquetas objetivo.
+#' @param num.iterations Número de iteraciones para el descenso del gradiente.
+#' @param learning.rate Tasa de aprendizaje para la actualización de los parámetros.
+#' 
+#' @return Lista con los pesos optimizados (\code{W}) y el sesgo optimizado (\code{b}).
+optimizacion <- function(W, b, X, y, num.iterations, learning.rate) {
+  for (i in 1:num.iterations) {
+    # Variables a optimizar con el descenso del gradiente
+    A <- (1 / (1 + exp(-((
+      X %*% W
+    ) + b))))
+    dW <- (1 / nrow(X)) * (t(X) %*% (A - y))
+    db <- (1 / nrow(X)) * sum(A - y)
+    
+    # Se actualiza el tensor de pesos y el término de sesgo
+    W <- W - (learning.rate * dW)
+    b <- b - (learning.rate * db)
+  }
+  
+  return(list(W, b))
+}
+```
+
+Posteriormente, la función del modelo, en la cual se genera el nivel predictivo del mismo, se optimizan los parámetros y se devuelven los ajustes de entrenamiento y testeo para los datos. 
+
+```{r fun_reg_log}
+#' Función que realiza la optimización de parámetros para la regresión logística
+#' utilizando los datos de entrenamiento proporcionados. Luego, realiza predicciones 
+#' sobre los datos de testeo y calcula la precisión del modelo tanto en entrenamiento 
+#' como en testeo.
+#'
+#' @param X.train Matriz de características de entrenamiento.
+#' @param y.train Vector de etiquetas de entrenamiento.
+#' @param X.val Matriz de características de testeo.
+#' @param y.val Vector de etiquetas de testeo.
+#' @param num.iterations Número de iteraciones para la optimización. Por defecto es 2000.
+#' @param learning.rate Tasa de aprendizaje para la optimización. Por defecto es 0.5.
+#'
+#' @return Lista con dos elementos:
+#'   \itemize{
+#'     \item Ajuste de precisión en entrenamiento.
+#'     \item Ajuste de precisión en testeo.
+#'   }
+regresion.logistica <- function(X.train, y.train,
+                                X.val, y.val,
+                                num.iterations = 2000,
+                                learning.rate = 0.5) {
+  # Se optimizan los parámetros
+  params <-
+    optimizacion(
+      W = rep(0, ncol(X)),
+      b = 0,
+      X = X.train,
+      y = y.train,
+      num.iterations = num.iterations,
+      learning.rate = learning.rate
+    )
+  
+  # Predicciones de entrenamiento y validación
+  y.prediction.validation <-
+    as.numeric(((1 / (1 + exp(
+      -((t(params[[1]]) %*% t(X.val)) + params[[2]])
+    )))) > 0.5)
+  y.prediction.train <-
+    as.numeric(((1 / (1 + exp(
+      -((t(params[[1]]) %*% t(X.train)) + params[[2]])
+    )))) > 0.5)
+  
+  # Lista para medir los ajustes de entrenamiento y validacion
+  lista.res <- list()
+  lista.res[[1]] <-
+    (100 - (mean(abs(
+      y.prediction.train - y.train
+    )) * 100))
+  lista.res[[2]] <-
+    (100 - (mean(abs(
+      y.prediction.validation - y.val
+    )) * 100))
+  
+  # Se devuelven los ajustes
+  return(lista.res)
+}
+```
+
+Se hace la prueba correspondiente del modelo, para esto, se buscó sobre cómo [separar](https://rpubs.com/jboscomendoza/arboles_decision_clasificacion) los datos de un *DataFrame*.
+
+```{r prueba}
+# Se separan las bases necesarias
+X <- as.matrix(datos.diabetes %>%
+                 select(-Outcome))
+
+y <- unlist(datos.diabetes %>%
+              select(Outcome))
+
+# Se normalizan los datos
+X <- (X - min(X)) / (max(X) - min(X))
+
+# Se separan los datos de prueba y los de entrenamiento
+X.train <- sample_frac(as.data.frame(cbind(X, y)), 0.8)
+X.val <- setdiff(as.data.frame(cbind(X, y)), X.train)
+
+# Se extraen los datos necesarios en cada variable
+y.train <- unlist(X.train[, ncol(X.train)])
+y.val <- unlist(X.val[, ncol(X.val)])
+X.train <- as.matrix(X.train[, -ncol(X.train)])
+X.val <- as.matrix(X.val[, -ncol(X.val)])
+
+# Modelo de regresión logística
+(
+  resultado <- regresion.logistica(
+    X.train = X.train,
+    y.train = y.train,
+    X.val = X.val,
+    y.val = y.val,
+    num.iterations = 1000,
+    learning.rate = 0.003
+  )
+)
+```
+
+Una vez conocido el resultado, lo cual confirma que la función sirve, se harán las pruebas de tiempos.
+
+```{r tiempos_ejecucion}
+microbenchmark(
+  reg.log = regresion.logistica(
+    X.train = X.train,
+    y.train = y.train,
+    X.val = X.val,
+    y.val = y.val,
+    num.iterations = 1000,
+    learning.rate = 0.003
+  ),
+  times = 10,
+  unit = "seconds"
+)
+```
+
+Los tiempos de la regresión logística.
+
+```{r tiempos_reg_log}
+tiempos.regresion.log <- data.frame(
+  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
+  tiempo = c(0.08, 0.06, 0, 0)
+  )
+```
+
+Gráfico de la regresión logística.
+
+```{r grafico_reg_log}
+ggplot(tiempos.regresion.log, aes(x = integrante, y = tiempo)) +
+  geom_col(fill = "deepskyblue2") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de la regresión logística",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Modelo estocástico
+
+Se inicia con la descarga de los datos, para la base de datos de los empleados se agregaron columnas con la edad y el año de nacimiento, para los valores tqx se realizó una tabla dinámica separada por cada sexo, todos los cambios fueron hechos desde MS Excel.
+
+```{r descarga_tabla_mort}
+qx.hombres <- read_excel("data/Mortalidad_supen.xlsx", sheet = "Sexo_1_limpio")
+```
+
+Se crea una función para cambiar los valores después del primer falso a falso, de una fila dada de una matriz
+
+```{r fun_false}
+#' Función que recibe un vector booleano (por ejemplo, una fila de una matriz), 
+#' y cambia todos los elementos después del primer FALSE a FALSE.
+#'
+#' @param fila Vector booleano.
+#' 
+#' @return Vector booleano modificado.
+fila.muerte <- function(fila){
+  fila[(which(!fila)[1] + 1):length(fila)] <- FALSE
+  return(fila)
+}
+```
+
+Primera iteración del modelo.
+
+```{r primera_iteracion}
+# Lista para resultados
+lista.primash <- list()
+
+# Tasa equivalente
+j <- ((1.04) * (1.03)) - 1
+
+# Todas las probabilidades de muerte, de hombres, de 21 hasta 65
+prob.muerteh <- sapply(1:45, function(i) sapply(((20 + i)):116, function(k) qx.hombres[[k, 5 + k]]))
+
+# Matriz de probabilidades de supervivencia, de hombres, desde edad inicial 21 hasta edad inicial 65, cada fila es una persona de edad 21, 22, 23, ...
+matriz.probh <- (1 - t(as.matrix(sapply((1:length(prob.muerteh)), function(l) c(prob.muerteh[[l]], rep(1, (length(prob.muerteh[[1]]) - length(prob.muerteh[[l]]) + 1)))))))
+
+# Se eliminan las columnas innecesarias
+matriz.probh <- matriz.probh[, 1:(ncol(matriz.probh) - 1)]
+
+# Nombres de filas y columnas
+colnames(matriz.probh) <- c(2024: (2024 + 115 - 20))
+rownames(matriz.probh) <- c(20:64)
+
+# El número de filas y columnas es fijo, entonces se guardará para que no se calcule en cada iteración después
+colmat <- ncol(matriz.probh)
+filmat <- nrow(matriz.probh)
+
+# Creamos las matrices de números aleatorios
+matriz.rndh <- matrix(data = pnorm(rnorm(colmat * filmat, 0, sd = 1), mean = 0, sd = 1), nrow = filmat, ncol = colmat)
+
+# Comparación de matrices
+matriz.rndh <- matriz.rndh < matriz.probh
+
+# Se agregan los falsos después del primer falso de la matriz
+matriz.rndh <- t(apply(matriz.rndh, 1, fila.muerte))
+
+# Cantidad de primas
+idh <- sapply(1:filmat, function(m) which(!matriz.rndh[m, ])[1])
+
+# Anualidades
+anh <- sapply(1:filmat, function(n) sum((1 + j) ^ -(0:(min(idh[n], (65 - 19 - n)) - 1))))
+
+# Rango de años de cada persona desde que llega a 65 años hasta que fallece
+annosh.65 <- sapply(20:64, function(o) c((65 - o):(idh[[o - 19]])))
+
+# Beneficios para trabajadores y pensionados
+benh <- sapply(1:length(annosh.65), function(p) (ifelse(idh + c(20:64) < 65, 5000000 * ((1 + j) ^ -(idh)), sum(300000 * 13 * (1 + j) ^ -annosh.65[[p]]) + 1000000 * ((1 + j) ^ -(idh))))[p])
+
+# Guardamos el resultado
+lista.primash[[1]] <- (benh / anh)
+```
+
+Posteriormente, se realiza la función que se encarga de las demás iteraciones del modelo estocástico.
+
+```{r siguientes_iteraciones}
+#' Función que implementa un modelo estocástico iterativo para calcular las primas.
+#' La función realiza iteraciones mientras la diferencia absoluta entre el promedio 
+#' de primas y la media de las primas en la lista sea mayor que 0.001.
+#'
+#' @param matriz.prob Matriz de probabilidades de sobrevivencia.
+#' @param prom.primas Promedio de las primas calculadas.
+#' @param lista.primas Lista con las primas calculadas en la primera iteración.
+#'
+#' @return Lista con las primas calculadas en cada iteración.
+#'
+modelo.estocastico <- function(matriz.prob, prom.primas, lista.primas){
+  while (abs(prom.primas - mean(unlist(lista.primas))) > 0.001) {
+    
+  # Creamos la matriz de números aleatorios
+  matriz.rnd <- matrix(data = pnorm(rnorm(colmat * filmat, mean = 0, sd = 1), mean = 0, sd = 1), nrow = filmat, ncol = colmat)
+  
+  # Comparación de matrices
+  matriz.rnd <- matriz.rnd < matriz.prob
+  
+  # Se agregan los falsos después del primer falso de la matriz
+  matriz.rnd <- t(apply(matriz.rnd, 1, fila.muerte))
+  
+  # Índice del primer falso
+  id <- sapply(1:filmat, function(m) which(!matriz.rnd[m, ])[1])
+  
+  # Anualidad
+  an <- sapply(1:filmat, function(n) sum((1 + j) ^ -(0:(min(id[n], (65 - 19 - n)) - 1))))
+  
+  # Rango de años de cada persona desde que llega a 65 años hasta que fallece
+  annos.65 <- sapply(20:64, function(o) c((65 - o):(id[[o - 19]])))
+  
+  # Beneficios para trabajadores y pensionados
+  ben <- sapply(1:length(annos.65), function(p) (ifelse(id + c(20:64) < 65, 5000000 * ((1 + j) ^ -(id)), sum(300000 * 13 * (1 + j) ^ -annos.65[[p]]) + 1000000 * ((1 + j) ^ -(id))))[p])
+  
+  # Actualizamos el promedio correspondiente
+  prom.primas <- mean(unlist(lista.primas))
+  
+  # Primas
+  lista.primas <- append(lista.primas, list(ben / an))
+  
+  }
+  
+  # Se devuelven las primas de cada iteración
+  return(lista.primas)
+  }
+```
+
+Probamos el modelo para cada género.
+
+```{r tiempo_modelo_estocastico}
+ini <- Sys.time()
+primas.estocasticash <- modelo.estocastico(matriz.probh, 0, lista.primash)
+fin <- Sys.time()
+print(((fin - ini) * 60) / length(primas.estocasticash))
+```
+
+Tiempos del modelo estocástico.
+
+```{r tiempos_modelo_estocastico}
+tiempos.estocast <- data.frame(
+  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
+  tiempo = c(0.032, 0.046, 0, 0)
+  )
+```
+
+Gráfico del modelo estocástico.
+
+```{r graf_modelo_estocastico}
+ggplot(tiempos.estocast, aes(x = integrante, y = tiempo)) +
+  geom_col(fill = "pink2") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos del modelo estocástico",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Producto acumulado
+
+```{r producto_acumulado_cumprod}
+#' Función que calcula el producto acumulado de un vector dado usando la función 
+#' cumprod de R.
+#' 
+#' @param vector Vector numérico.
+#' 
+#' @return Vector con el producto acumulado de los elementos del vector dado.
+prod.acum.cumprod <- function(vector) {
+  return(cumprod(vector))
+}
+
+```
+
+```{r tiempo_cumprod}
+microbenchmark(prod.acum.cumprod(runif(
+  100000, min = .Machine$double.eps, max = 2
+)), times = 10, unit = "seconds")
+```
+
+```{r producto_acumulado_sapply}
+#' Función que calcula el producto acumulado de un vector dado usando sapply.
+#' 
+#' @param vector Vector numérico.
+#' 
+#' @return Vector con el producto acumulado de los elementos del vector dado.
+prod.acum.sapply <- function(vector) {
+  return(sapply(1:length(vector), function(i)
+    prod(vector[1:i])))
+  
+}
+```
+
+```{r tiempo_sapply}
+microbenchmark(prod.acum.sapply(runif(
+  100000, min = .Machine$double.eps, max = 2
+)), times = 10, unit = "seconds")
+```
+
+```{r tiempos_producto_acumulado}
+tiempos.producto.acumulado <- data.frame(
+  integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
+  cumprod = c(0, 0.01, 0.006, 0),
+  sapply = c(0, 44.54, 27.82, 0)
+)
+```
+
+## Cifrado César
+
+```{r descarga_el_principito}
+principito <- read_file("data/El_principito.txt")
+```
+
+```{r cifrado_cesar_chartr}
+#' Función que cifra un texto dado utilizando la función chartr de R,
+#' aplicando un desplazamiento específico en el alfabeto.
+#' 
+#' @param texto Texto que se desea cifrar.
+#' @param desplazamiento Número entero que indica el desplazamiento en el alfabeto.
+#' 
+#' @return Texto cifrado utilizando el método chartr.
+cifrado.chartr <- function(texto, desplazamiento) {
+  # Definir el alfabeto
+  alfabeto_minusculas <- "abcdefghijklmnopqrstuvwxyz"
+  alfabeto_mayusculas <- "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  
+  # Crear el alfabeto desplazado
+  alfabeto_minusculas_desplazado <- paste0(
+    substr(
+      alfabeto_minusculas,
+      desplazamiento + 1,
+      nchar(alfabeto_minusculas)
+    ),
+    substr(alfabeto_minusculas, 1, desplazamiento)
+  )
+  
+  alfabeto_mayusculas_desplazado <- paste0(
+    substr(
+      alfabeto_mayusculas,
+      desplazamiento + 1,
+      nchar(alfabeto_mayusculas)
+    ),
+    substr(alfabeto_mayusculas, 1, desplazamiento)
+  )
+  
+  # cambiar las letras
+  texto_cifrado <- chartr(
+    paste0(alfabeto_minusculas, alfabeto_mayusculas),
+    paste0(
+      alfabeto_minusculas_desplazado,
+      alfabeto_mayusculas_desplazado
+    ),
+    texto
+  )
+  
+  return(texto_cifrado)
+}
+
+```
+
+```{r prueba_chartr}
+microbenchmark(cifrado.chartr(principito, 5), times = 10, unit = "seconds")
+```
+
+```{r cifrado_cesar_stringi}
+#' Función que cifra un texto desplazando cada letra según un número dado.
+#' Funciona tanto para letras minúsculas como mayúsculas manteniendo la 
+#' estructura y el caso original del texto.
+#'
+#' @param texto Texto que se desea cifrar.
+#' @param desplazamiento Número entero que indica cuántas posiciones desplazar
+#' cada letra. Puede ser positivo (desplazamiento a la derecha) o negativo
+#' (desplazamiento a la izquierda).
+#'
+#' @return Texto cifrado según el desplazamiento especificado.
+cifrado.stringi <- function(texto, desplazamiento) {
+  # Función para desplazar letras
+  desplazar <- function(letra, desplazamiento) {
+    if (stri_detect_regex(letra, "[a-z]")) {
+      return(stri_sub(
+        "abcdefghijklmnopqrstuvwxyz",
+        #usar modulo 26
+        (
+          stri_locate_all_fixed("abcdefghijklmnopqrstuvwxyz", letra)[[1]][1, 1] +
+            desplazamiento - 1
+        ) %% 26 + 1,
+        (
+          stri_locate_all_fixed("abcdefghijklmnopqrstuvwxyz", letra)[[1]][1, 1] +
+            desplazamiento - 1
+        ) %% 26 + 1
+      ))
+    } else if (stri_detect_regex(letra, "[A-Z]")) {
+      return(stri_sub(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        (
+          stri_locate_all_fixed("ABCDEFGHIJKLMNOPQRSTUVWXYZ", letra)[[1]][1, 1] +
+            desplazamiento - 1
+        ) %% 26 + 1,
+        (
+          stri_locate_all_fixed("ABCDEFGHIJKLMNOPQRSTUVWXYZ", letra)[[1]][1, 1] +
+            desplazamiento - 1
+        ) %% 26 + 1
+      ))
+    } else {
+      return(letra)
+    }
+  }
+  
+  # Desplazar cada letra del texto y unirlas
+  texto_cifrado <- stri_join(
+    sapply(
+      stri_split_boundaries(texto, type = "character")[[1]],
+      desplazar,
+      desplazamiento = desplazamiento
+    ),
+    collapse = ""
+  )
+  
+  return(texto_cifrado)
+}
+
+```
+
+```{r prueba_stringi}
+microbenchmark(cifrado.stringi(principito, 5), times = 10, unit = "seconds")
+```
+
+```{r tiempos_cifrado_cesar}
+tiempos.cifrado.cesar <- data.frame(
+  integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
+  chartr = c(0, 0.02, 0.016, 0),
+  stringi = c(0, 2.46	, 1.3, 0)
+)
+```
+
+
+
+
+
+
