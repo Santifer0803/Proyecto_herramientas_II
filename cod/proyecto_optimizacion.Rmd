@@ -522,7 +522,7 @@ tiempos.mediam <- data.frame(
 
 En un gráfico.
 
-```{r grafico_mmovil}
+```{r grafico_movil}
 ggplot(tiempos.mediam, aes(x = integrante, y = media_movil)) +
   geom_col(fill = "darkorchid2") +
   labs(
@@ -798,10 +798,198 @@ microbenchmark(
 )
 ```
 
+Los tiempos de la regresión logística.
+
 ```{r tiempos_reg_log}
-tiempos.eliminar.columnas <- data.frame(
+tiempos.regresion.log <- data.frame(
   integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
   tiempo = c(0, 0.06, 0, 0)
   )
 ```
 
+Gráfico de la regresión logística.
+
+```{r grafico_reg_log}
+ggplot(tiempos.regresion.log, aes(x = integrante, y = tiempo)) +
+  geom_col(fill = "deepskyblue2") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de la regresión logística",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Modelo estocástico
+
+Se inicia con la descarga de los datos, para la base de datos de los empleados se agregaron columnas con la edad y el año de nacimiento, para los valores tqx se realizó una tabla dinámica separada por cada sexo, todos los cambios fueron hechos desde MS Excel.
+
+```{r descarga_datos}
+empleados <- read_excel("data/Base_empleados.xlsx")
+
+qx.hombres <- read_excel("data/Mortalidad_supen.xlsx", sheet = "Sexo_1_limpio")
+```
+
+Se cambia el nombre y el orden las columnas de la base de empleados.
+
+```{r corr_columnas}
+
+# Se renombran las columnas
+empleados <- empleados %>% 
+  rename(
+    id = "Número de empleado",
+    fecha_nac = "Fecha de nacimiento",
+    sexo = Sexo,
+    edad = Edad,
+    anno_nac = Anno_nac
+  )
+
+# Se reordena el DataFrame
+empleados <- empleados %>%
+  dplyr::select(id, sexo, edad, anno_nac, fecha_nac)
+```
+
+Se creará una función para identificar el primer *False* de cada fila de una matriz.
+
+```{r fun_false}
+fila.muerte <- function(fila){
+  #' Función que devuelve el índice de un vector una posición antes de un falso.
+  #'
+  #' Calcula el índice de la \code{fila} de una matriz una posición antes de que
+  #' el individuo fallezca.
+  #'
+  #' @param fila (Numeric) Vector o fila de una matriz de booleanos o de 1 y 0.
+  #'
+  #' @return (Numeric) Índice, una posición antes, de donde se encuentre un
+  #' falso.
+  #'
+  fila[(which(!fila)[1] + 1):length(fila)] <- FALSE
+  return(fila)
+}
+```
+
+Primera iteración del modelo.
+
+```{r primera_iteracion}
+# Lista para resultados
+lista.primash <- list()
+
+# Tasa equivalente
+j <- ((1.04) * (1.03)) - 1
+
+# Todas las probabilidades de muerte, de hombres, de 21 hasta 65
+prob.muerteh <- sapply(1:45, function(i) sapply(((20 + i)):116, function(k) qx.hombres[[k, 5 + k]]))
+
+# Matriz de probabilidades de supervivencia, de hombres, desde edad inicial 21 hasta edad inicial 65, cada fila es una persona de edad 21, 22, 23, ...
+matriz.probh <- (1 - t(as.matrix(sapply((1:length(prob.muerteh)), function(l) c(prob.muerteh[[l]], rep(1, (length(prob.muerteh[[1]]) - length(prob.muerteh[[l]]) + 1)))))))
+
+# Se eliminan las columnas innecesarias
+matriz.probh <- matriz.probh[, 1:(ncol(matriz.probh) - 1)]
+
+# Nombres de filas y columnas
+colnames(matriz.probh) <- c(2024: (2024 + 115 - 20))
+rownames(matriz.probh) <- c(20:64)
+
+# El número de filas y columnas es fijo, entonces se guardará para que no se calcule en cada iteración después
+colmat <- ncol(matriz.probh)
+filmat <- nrow(matriz.probh)
+
+# Creamos las matrices de números aleatorios
+matriz.rndh <- matrix(data = pnorm(rnorm(colmat * filmat, 0, sd = 1), mean = 0, sd = 1), nrow = filmat, ncol = colmat)
+
+# Comparación de matrices
+matriz.rndh <- matriz.rndh < matriz.probh
+
+# Se agregan los falsos después del primer falso de la matriz
+matriz.rndh <- t(apply(matriz.rndh, 1, fila.muerte))
+
+# Cantidad de primas
+idh <- sapply(1:filmat, function(m) which(!matriz.rndh[m, ])[1])
+
+# Anualidades
+anh <- sapply(1:filmat, function(n) sum((1 + j) ^ -(0:(min(idh[n], (65 - 19 - n)) - 1))))
+
+# Rango de años de cada persona desde que llega a 65 años hasta que fallece
+annosh.65 <- sapply(20:64, function(o) c((65 - o):(idh[[o - 19]])))
+
+# Beneficios para trabajadores y pensionados
+benh <- sapply(1:length(annosh.65), function(p) (ifelse(idh + c(20:64) < 65, 5000000 * ((1 + j) ^ -(idh)), sum(300000 * 13 * (1 + j) ^ -annosh.65[[p]]) + 1000000 * ((1 + j) ^ -(idh))))[p])
+
+# Guardamos el resultado
+lista.primash[[1]] <- (benh / anh)
+```
+
+Posteriormente, se realiza la función que se encarga de las demás iteraciones del modelo estocástico.
+
+```{r siguientes_iteraciones}
+modelo.estocastico <- function(matriz.prob, prom.primas, lista.primas){
+  while (abs(prom.primas - mean(unlist(lista.primas))) > 0.001) {
+    
+  # Creamos la matriz de números aleatorios
+  matriz.rnd <- matrix(data = pnorm(rnorm(colmat * filmat, mean = 0, sd = 1), mean = 0, sd = 1), nrow = filmat, ncol = colmat)
+  
+  # Comparación de matrices
+  matriz.rnd <- matriz.rnd < matriz.prob
+  
+  # Se agregan los falsos después del primer falso de la matriz
+  matriz.rnd <- t(apply(matriz.rnd, 1, fila.muerte))
+  
+  # Índice del primer falso
+  id <- sapply(1:filmat, function(m) which(!matriz.rnd[m, ])[1])
+  
+  # Anualidad
+  an <- sapply(1:filmat, function(n) sum((1 + j) ^ -(0:(min(id[n], (65 - 19 - n)) - 1))))
+  
+  # Rango de años de cada persona desde que llega a 65 años hasta que fallece
+  annos.65 <- sapply(20:64, function(o) c((65 - o):(id[[o - 19]])))
+  
+  # Beneficios para trabajadores y pensionados
+  ben <- sapply(1:length(annos.65), function(p) (ifelse(id + c(20:64) < 65, 5000000 * ((1 + j) ^ -(id)), sum(300000 * 13 * (1 + j) ^ -annos.65[[p]]) + 1000000 * ((1 + j) ^ -(id))))[p])
+  
+  # Actualizamos el promedio correspondiente
+  prom.primas <- mean(unlist(lista.primas))
+  
+  # Primas
+  lista.primas <- append(lista.primas, list(ben / an))
+  
+  }
+  
+  # Se devuelven las primas de cada iteración
+  return(lista.primas)
+  }
+```
+
+Probamos el modelo para cada género.
+
+```{r modelo_estocastico}
+ini <- Sys.time()
+primas.estocasticash <- modelo.estocastico(matriz.probh, 0, lista.primash)
+fin <- Sys.time()
+print(((fin - ini) * 60) / length(primas.estocasticash))
+```
+
+Los tiempos del modelo estocástico.
+
+```{r tiempos_reg_log}
+tiempos.estocast <- data.frame(
+  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
+  tiempo = c(0, 0.046, 0, 0)
+  )
+```
+
+Gráfico de la regresión logística.
+
+```{r grafico_reg_log}
+ggplot(tiempos.estocast, aes(x = integrante, y = tiempo)) +
+  geom_col(fill = "pink2") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo",
+    title = "Tiempos de la regresión logística",
+    caption = "Fuente: elaboración propia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
