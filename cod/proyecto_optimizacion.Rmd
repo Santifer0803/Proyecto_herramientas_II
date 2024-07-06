@@ -67,7 +67,7 @@ matriz <- matrix(runif(n^2), n, n)
 
 Se guarda el tiempo de las matrices.
 
-```{r tiempo_matrices}
+```{r tiempos_matrices}
 # Se guarda este tiempo por integrante en un dataframe
 tiempos.matrices <- data.frame(
   integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
@@ -77,7 +77,7 @@ tiempos.matrices <- data.frame(
 
 Se grafica lo anterior.
 
-```{r tiempos_matrices}
+```{r graf_tiempos_matrices}
 ggplot(tiempos.matrices, aes(x = integrante, y = tiempo)) +
   geom_col(fill = "coral3") +
   labs(
@@ -89,7 +89,6 @@ ggplot(tiempos.matrices, aes(x = integrante, y = tiempo)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-
 
 ## Limpieza eficiente
 
@@ -332,7 +331,7 @@ tiempos.limpieza <- data.frame(
 
 Se grafican los tiempos de la limpieza.
 
-```{r tiempo_limpieza}
+```{r graf_tiempos_limpieza}
 # Convertir el formato de ancho a largo
 limpieza.largo <-
   gather(tiempos.limpieza,
@@ -368,7 +367,7 @@ ggplot(limpieza.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
 
 Se ordena la columna de grupo etario.
 
-```{r ordenar_gretario}
+```{r ordenar_rango_etario}
 muertes.df$edadsrec <- factor(muertes.df$edadsrec, levels = c("15 - 19", "20 - 24", "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49", "50 - 54", "55 - 59", "60 - 64", "65 - 69", "70 - 74", "75 - 79", "80 - 84", "85 - 89", "90 - 94", "95 - 99", "100 - 121"))
 ```
 
@@ -423,7 +422,7 @@ plan(multisession)
 
 Se realiza un DataFrame con el tiempo (en segundos) promedio de los histogramas y de los gráficos de barras respectivamente, cada integrante del grupo lo añade manualmente con los tiempos del chunk anterior.
 
-```{r df_tiempos}
+```{r df_tiempos_graficos}
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.graficos <- data.frame(
   integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
@@ -434,7 +433,7 @@ tiempos.graficos <- data.frame(
 
 Se grafica lo anterior.
 
-```{r tiempo_graficos}
+```{r graf_tiempos_graficos}
 graficos.largo <-
   gather(tiempos.graficos,
          key = "condicion",
@@ -469,7 +468,7 @@ ggplot(graficos.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
 
 Inicialmente, se descarga la base para reemplazar la media móvil en una de sus columnas. Para modificar esta base, se hará un objeto de tipo [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
 
-```{r dascarga_datos_2}
+```{r dascarga_salarios}
 # Se descargan los datos normalmente
 base.salarios <- read_excel("data/Base_salarios.xlsx")
 
@@ -510,13 +509,13 @@ media.movil <- function(col.nulos, banda) {
 
 Con la función anterior, se realizan 10 simulaciones para ver su tiempo promedio.
 
-```{r tiempo_media}
+```{r tiempo_media_movil}
 (microbenchmark(media.movil(copia.col, 5), times = 10))
 ```
 
 Hacemos el DataFrame con los valores promedio de cada integrante (fijarse en la unidad de tiempo, pues los datos son en segundos).
 
-```{r df_tiempos}
+```{r df_tiempos_media_movil}
 # Dentro de los mismos vectores, se agregan los demás datos
 tiempos.mediam <- data.frame(
   integrante = c("Santiago", "Eyeri", "Paula", "Alejandro"),
@@ -526,7 +525,7 @@ tiempos.mediam <- data.frame(
 
 En un gráfico.
 
-```{r grafico_movil}
+```{r graf_tiempos_media_movil}
 ggplot(tiempos.mediam, aes(x = integrante, y = media_movil)) +
   geom_col(fill = "darkorchid2") +
   labs(
@@ -543,7 +542,7 @@ ggplot(tiempos.mediam, aes(x = integrante, y = media_movil)) +
 
 Similar al ejercicio de media móvil, se inicia descargando la base de datos y se modifica a un objeto de tipo data.table. Luego se crea la función que hace lo deseado y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
 
-```{r ejercicio_elimcol}
+```{r eliminar_cols}
 base.salarios <- read_excel("data/Base_salarios.xlsx")
 
 # base.salarios <- setDT(base.salarios) # Próximamente se harán más pruebas con esto
@@ -566,9 +565,9 @@ eliminar.columnas <- function(df, porcentaje) {
 }
 ```
 
-Prueba de la función y tiempo promedio de ejecución
+Prueba de la función y tiempo promedio de ejecución.
 
-```{r tiempos_elimcol}
+```{r tiempos_eliminar_cols}
 prueba.1 <- eliminar.columnas(base.salarios, 0.1)
 
 # Como se puede ver, en ninguna columna del dataframe se presenta una cantidad de valores nulos mayor al 10%, por lo que se procede a probar la función con un porcentaje de 1% para que se eliminen al menos 2 columnas y se pueda ver mejor el tiempo de ejecución de la función
@@ -579,9 +578,9 @@ prueba.2 <- eliminar.columnas(base.salarios, 0.01)
 (microbenchmark(eliminar.columnas(base.salarios, 0.01), times = 10))
 ```
 
-Por último, se hace un dataframe con los tiempos de ejecución de cada integrante
+Por último, se hace un DataFrame con los tiempos de ejecución de cada integrante.
 
-```{r df_elimcol}
+```{r df_tiempos_eliminar_cols}
 tiempos.eliminar.columnas <- data.frame(
   integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
   tiempo = c((975.28) / 1000000, (766.26) / 1000000, (3569.87) / 1000000, (5.604471)/1000 )
@@ -590,7 +589,7 @@ tiempos.eliminar.columnas <- data.frame(
 
 En gráfico.
 
-```{r grafico_elimcol}
+```{r graf_eliminar_cols}
 ggplot(tiempos.eliminar.columnas, aes(x = integrante, y = tiempo)) +
   geom_col(fill = "darkolivegreen3") +
   labs(
@@ -603,12 +602,11 @@ ggplot(tiempos.eliminar.columnas, aes(x = integrante, y = tiempo)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-
 ## Imputación por agrupación
 
 Para este ejercicio, se incia realizando la imputación por agrupación de múltiples maneras. Iniciando con data.table.
 
-```{r funcion_agrupacion}
+```{r imputacion_agrupacion}
 base.salarios <- read_excel("data/Base_salarios.xlsx")
 
 microbenchmark(datatable = {
@@ -639,7 +637,7 @@ tiempos.agrupacion <- data.frame(
 
 Con un gráfico.
 
-```{r grafico_imputacion}
+```{r graf_imputacion}
 agrupacion.largo <-
   gather(tiempos.agrupacion,
          key = "condicion",
@@ -674,11 +672,8 @@ ggplot(agrupacion.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
 
 Inicialmente, descargamos los datos con los que se hará la regresión logística.
 
-```{r descarga_de_la_base}
-datos.diabetes <-
-  read.csv(
-    "C:/Users/mapis/OneDrive/Documents/Universidad/5 - Quinto semestre/Herramientas para las ciencias de datos II/Proyecto grupal/Respaldo/Diabetes.txt"
-  )
+```{r descarga_diabetes}
+datos.diabetes <- read.csv("data/Diabetes.txt")
 ```
 
 Se proceden a crear las funciones necesarias, iniciando con la función de optimización.
@@ -748,7 +743,6 @@ regresion.logistica <- function(X.train,
 }
 ```
 
-
 Se hace la prueba correspondiente del modelo, para esto, se buscó sobre cómo [separar](https://rpubs.com/jboscomendoza/arboles_decision_clasificacion) los datos de un *DataFrame*.
 
 ```{r prueba}
@@ -787,7 +781,7 @@ X.val <- as.matrix(X.val[, -ncol(X.val)])
 
 Una vez conocido el resultado, lo cual confirma que la función sirve, se harán las pruebas de tiempos.
 
-```{r tiempos}
+```{r tiempos_ejecucion}
 microbenchmark(
   reg.log = regresion.logistica(
     X.train = X.train,
@@ -807,7 +801,7 @@ Los tiempos de la regresión logística.
 ```{r tiempos_reg_log}
 tiempos.regresion.log <- data.frame(
   integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
-  tiempo = c(0, 0.06, 0, 0)
+  tiempo = c(0.08, 0.06, 0, 0)
   )
 ```
 
@@ -830,29 +824,8 @@ ggplot(tiempos.regresion.log, aes(x = integrante, y = tiempo)) +
 
 Se inicia con la descarga de los datos, para la base de datos de los empleados se agregaron columnas con la edad y el año de nacimiento, para los valores tqx se realizó una tabla dinámica separada por cada sexo, todos los cambios fueron hechos desde MS Excel.
 
-```{r descarga_datos}
-empleados <- read_excel("data/Base_empleados.xlsx")
-
+```{r descarga_tabla_mort}
 qx.hombres <- read_excel("data/Mortalidad_supen.xlsx", sheet = "Sexo_1_limpio")
-```
-
-Se cambia el nombre y el orden las columnas de la base de empleados.
-
-```{r corr_columnas}
-
-# Se renombran las columnas
-empleados <- empleados %>% 
-  rename(
-    id = "Número de empleado",
-    fecha_nac = "Fecha de nacimiento",
-    sexo = Sexo,
-    edad = Edad,
-    anno_nac = Anno_nac
-  )
-
-# Se reordena el DataFrame
-empleados <- empleados %>%
-  dplyr::select(id, sexo, edad, anno_nac, fecha_nac)
 ```
 
 Se creará una función para identificar el primer *False* de cada fila de una matriz.
@@ -967,82 +940,81 @@ modelo.estocastico <- function(matriz.prob, prom.primas, lista.primas){
 
 Probamos el modelo para cada género.
 
-```{r modelo_estocastico}
+```{r tiempo_modelo_estocastico}
 ini <- Sys.time()
 primas.estocasticash <- modelo.estocastico(matriz.probh, 0, lista.primash)
 fin <- Sys.time()
 print(((fin - ini) * 60) / length(primas.estocasticash))
 ```
 
-Los tiempos del modelo estocástico.
+Tiempos del modelo estocástico.
 
-```{r tiempos_reg_log}
+```{r tiempos_modelo_estocastico}
 tiempos.estocast <- data.frame(
   integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
-  tiempo = c(0, 0.046, 0, 0)
+  tiempo = c(0.032, 0.046, 0, 0)
   )
 ```
 
-Gráfico de la regresión logística.
+Gráfico del modelo estocástico.
 
-```{r grafico_reg_log}
+```{r graf_modelo_estocastico}
 ggplot(tiempos.estocast, aes(x = integrante, y = tiempo)) +
   geom_col(fill = "pink2") +
   labs(
     x = "Integrante",
     y = "Tiempo",
-    title = "Tiempos de la regresión logística",
+    title = "Tiempos del modelo estocástico",
     caption = "Fuente: elaboración propia"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
 ## Producto acumulado
 
-```{r producto acumulado usando cumprod}
-acumulado.cumprod <- function(vector) {
+```{r producto_acumulado_cumprod}
+prod.acum.cumprod <- function(vector) {
   return(cumprod(vector))
 }
 
 ```
 
-```{r prueba cumprod}
-microbenchmark(acumulado.cumprod(runif(
+```{r tiempo_cumprod}
+microbenchmark(prod.acum.cumprod(runif(
   100000, min = .Machine$double.eps, max = 2
 )), times = 10, unit = "seconds")
 ```
 
-```{r producto acumulado usando sapply}
-acumulado.sapply <- function(vector) {
+```{r producto_acumulado_sapply}
+prod.acum.sapply <- function(vector) {
   return(sapply(1:length(vector), function(i)
     prod(vector[1:i])))
   
 }
 ```
 
-```{r prueba sapply}
-microbenchmark(acumulado.sapply(runif(
+```{r tiempo_sapply}
+microbenchmark(prod.acum.sapply(runif(
   100000, min = .Machine$double.eps, max = 2
 )), times = 10, unit = "seconds")
 ```
 
-```{r tiempos producto acumulado}
-
+```{r tiempos_producto_acumulado}
 tiempos.producto.acumulado <- data.frame(
   integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
-  cumprod = c(0, 0.00997996, 0, 0),
-  sapply = c(0, 44.53777	, 0, 0)
+  cumprod = c(0, 0.01, 0.006, 0),
+  sapply = c(0, 44.54, 27.82, 0)
 )
-
 ```
 
 ## Cifrado César
 
-```{r cargar archivo.txt para el cifrado cesar}
-principito <- read_file("el_principito.txt")
+```{r descarga_el_principito}
+principito <- read_file("data/El_principito.txt")
 ```
 
-```{r cifrado cesar usando chartr}
+```{r cifrado_cesar_chartr}
 cifrado.chartr <- function(texto, desplazamiento) {
   # Definir el alfabeto
   alfabeto_minusculas <- "abcdefghijklmnopqrstuvwxyz"
@@ -1082,11 +1054,11 @@ cifrado.chartr <- function(texto, desplazamiento) {
 
 ```
 
-```{r prueba chartr}
+```{r prueba_chartr}
 microbenchmark(cifrado.chartr(principito, 5), times = 10, unit = "seconds")
 ```
 
-```{r cifrado cesar usando stringi}
+```{r cifrado_cesar_stringi}
 cifrado.stringi <- function(texto, desplazamiento) {
   # Función para desplazar letras
   desplazar <- function(letra, desplazamiento) {
@@ -1135,18 +1107,17 @@ cifrado.stringi <- function(texto, desplazamiento) {
 
 ```
 
-```{r prueba stringi}
+```{r prueba_stringi}
 microbenchmark(cifrado.stringi(principito, 5), times = 10, unit = "seconds")
 ```
 
-```{r tiempos cifrado cesar}
+```{r tiempos_cifrado_cesar}
 tiempos.cifrado.cesar <- data.frame(
   integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
-  chartr = c(0, 0.02062909, 0, 0),
-  stringi = c(0, 2.459928	, 0, 0)
+  chartr = c(0, 0.02, 0.016, 0),
+  stringi = c(0, 2.46	, 1.3, 0)
 )
 ```
-
 
 
 
