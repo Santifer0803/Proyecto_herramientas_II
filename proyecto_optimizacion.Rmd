@@ -7,24 +7,6 @@ output: html_document
 
 # Proyecto grupal CA-0305
 
-Para poder utilizar el proyecto, se iniciará con la descarga de las librarías que se utilizaron (Se pondrán como un comentario ya que cada persona puede tener alguna de estas librerías, de esta manera se podrán elegir las que no se tengan individualmente).
-
-```{r librerias_necesarias}
-# Librerías comunes
-# install.packages("ggplot2")
-# install.packages("dplyr")
-# install.packages("readxl")
-# install.packages("readr")
-
-# Librerías menos comunes
-# install.packages("microbenchmark")
-# install.packages("future")
-# install.packages("furrr")
-# install.packages("data.table")
-# install.packages("tidyr")
-# install.packages("stringi")
-```
-
 Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
 
 ```{r librerias_generales}
@@ -82,7 +64,7 @@ ggplot(tiempos.matrices, aes(x = integrante, y = tiempo)) +
   geom_col(fill = "coral3") +
   labs(
     x = "Integrante",
-    y = "Tiempo",
+    y = "Tiempo (segundos)",
     title = "Tiempos del ejercicio de matrices",
     caption = "Fuente: elaboración propia"
   ) +
@@ -336,7 +318,7 @@ Se grafican los tiempos de la limpieza.
 limpieza.largo <-
   gather(tiempos.limpieza,
          key = "condicion",
-         value = "tiempo",
+         value = "Tiempo (segundos)",
          -integrante)
 
 # Se diferencian las barras
@@ -351,7 +333,7 @@ ggplot(limpieza.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
   geom_col(position = "dodge") +
   labs(
     x = "Integrante",
-    y = "Tiempo",
+    y = "Tiempo (segundos)",
     title = "Tiempos de limpieza de una base",
     caption = "Fuente: elaboración propia"
   ) +
@@ -460,7 +442,7 @@ Se grafica lo anterior.
 graficos.largo <-
   gather(tiempos.graficos,
          key = "condicion",
-         value = "tiempo",
+         value = "Tiempo (segundos)",
          -integrante)
 
 # Se diferencian las barras
@@ -475,7 +457,7 @@ ggplot(graficos.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
   geom_col(position = "dodge") +
   labs(
     x = "Integrante",
-    y = "Tiempo",
+    y = "Tiempo (segundos)",
     title = "Tiempos de gráficos",
     caption = "Fuente: elaboración propia"
   ) +
@@ -561,7 +543,7 @@ ggplot(tiempos.mediam, aes(x = integrante, y = media_movil)) +
   geom_col(fill = "darkorchid2") +
   labs(
     x = "Integrante",
-    y = "Tiempo",
+    y = "Tiempo (segundos)",
     title = "Tiempos de imputación por media móvil",
     caption = "Fuente: elaboración propia"
   ) +
@@ -632,7 +614,7 @@ ggplot(tiempos.eliminar.columnas, aes(x = integrante, y = tiempo)) +
   geom_col(fill = "darkolivegreen3") +
   labs(
     x = "Integrante",
-    y = "Tiempo",
+    y = "Tiempo (segundos)",
     title = "Tiempos de la eliminación de columnas",
     caption = "Fuente: elaboración propia"
   ) +
@@ -679,7 +661,7 @@ Con un gráfico.
 agrupacion.largo <-
   gather(tiempos.agrupacion,
          key = "condicion",
-         value = "tiempo",
+         value = "Tiempo (segundos)",
          -integrante)
 
 # Se diferencian las barras
@@ -694,7 +676,7 @@ ggplot(agrupacion.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
   geom_col(position = "dodge") +
   labs(
     x = "Integrante",
-    y = "Tiempo",
+    y = "Tiempo (segundos)",
     title = "Tiempos de gráficos",
     caption = "Fuente: elaboración propia"
   ) +
@@ -876,7 +858,7 @@ ggplot(tiempos.regresion.log, aes(x = integrante, y = tiempo)) +
   geom_col(fill = "deepskyblue2") +
   labs(
     x = "Integrante",
-    y = "Tiempo",
+    y = "Tiempo (segundos)",
     title = "Tiempos de la regresión logística",
     caption = "Fuente: elaboración propia"
   ) +
@@ -1033,7 +1015,7 @@ ggplot(tiempos.estocast, aes(x = integrante, y = tiempo)) +
   geom_col(fill = "pink2") +
   labs(
     x = "Integrante",
-    y = "Tiempo",
+    y = "Tiempo (segundos)",
     title = "Tiempos del modelo estocástico",
     caption = "Fuente: elaboración propia"
   ) +
@@ -1057,9 +1039,11 @@ prod.acum.cumprod <- function(vector) {
 ```
 
 ```{r tiempo_cumprod}
-microbenchmark(prod.acum.cumprod(runif(
-  100000, min = .Machine$double.eps, max = 2
-)), times = 10, unit = "seconds")
+microbenchmark(producto.acumulado = {
+  prod.acum.cumprod(runif(100000, min = .Machine$double.eps, max = 2))
+},
+times = 10,
+unit = "seconds")
 ```
 
 ```{r producto_acumulado_sapply}
@@ -1083,10 +1067,42 @@ microbenchmark(prod.acum.sapply(runif(
 
 ```{r tiempos_producto_acumulado}
 tiempos.producto.acumulado <- data.frame(
-  integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
-  cumprod = c(0, 0.01, 0.006, 0),
-  sapply = c(0, 44.54, 27.82, 0)
+  integrante = c("Santiago", "Paula", "Eyeri", "Alejandro"),
+  cumprod = c(0.001, 0.01, 0.006, 0),
+  sapply = c(27.93, 44.54, 27.82, 0)
 )
+```
+
+```{r graf_tiempos_prod_acum}
+# Convertir el formato de ancho a largo
+producto.acum.largo <-
+  gather(tiempos.producto.acumulado,
+         key = "condicion",
+         value = "tiempo",
+         -integrante)
+
+# Se diferencian las barras
+producto.acum.largo$condicion <-
+  factor(
+    producto.acum.largo$condicion,
+    levels = c("cumprod", "sapply"),
+    labels = c("cumprod", "sapply")
+  )
+
+ggplot(producto.acum.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo (segundos)",
+    title = "Tiempos del producto acumulado",
+    caption = "Fuente: elaboración propia"
+  ) +
+  scale_fill_manual(values = c(
+    "cumprod" = "seagreen3",
+    "sapply" = "turquoise3"
+  )) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ## Cifrado César
@@ -1212,12 +1228,42 @@ microbenchmark(cifrado.stringi(principito, 5), times = 10, unit = "seconds")
 ```{r tiempos_cifrado_cesar}
 tiempos.cifrado.cesar <- data.frame(
   integrante = c("Santiago","Paula", "Eyeri", "Alejandro"),
-  chartr = c(0, 0.02, 0.016, 0),
-  stringi = c(0, 2.46	, 1.3, 0)
+  chartr = c(0.012, 0.02, 0.016, 0),
+  stringi = c(1.25, 2.46	, 1.3, 0)
 )
 ```
 
+```{r graf_tiempos_textos}
+# Convertir el formato de ancho a largo
+texto.largo <-
+  gather(tiempos.cifrado.cesar,
+         key = "condicion",
+         value = "tiempo",
+         -integrante)
 
+# Se diferencian las barras
+texto.largo$condicion <-
+  factor(
+    texto.largo$condicion,
+    levels = c("chartr", "stringi"),
+    labels = c("chartr", "stringi")
+  )
+
+ggplot(texto.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Integrante",
+    y = "Tiempo (segundos)",
+    title = "Tiempos del cifrado Cesar",
+    caption = "Fuente: elaboración propia"
+  ) +
+  scale_fill_manual(values = c(
+    "chartr" = "aquamarine3",
+    "stringi" = "mediumpurple3"
+  )) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
 
 
