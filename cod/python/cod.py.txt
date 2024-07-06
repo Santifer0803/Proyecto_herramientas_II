@@ -1,0 +1,1 @@
+En este directorio se encuentra el código de Python desarrollado para el proyecto.
