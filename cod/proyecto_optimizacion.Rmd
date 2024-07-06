@@ -26,10 +26,16 @@ Para poder utilizar el proyecto, se iniciará con la descarga de las librarías 
 Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
 
 ```{r librerias_generales}
-library(microbenchmark)
-library(ggplot2)
-library(dplyr)
-library(readxl)
+pacman::p_load(microbenchmark,
+               ggplot2,
+               dplyr,
+               readxl,
+               utils,
+               tidyr,
+               data.table,
+               furrr,
+               future
+               )
 ```
 
 ## Operaciones matriciales
@@ -90,7 +96,6 @@ Los data.table tienen un operador muy importante que es el [:=](https://stackove
 Además, se usará [chartr](https://www.geeksforgeeks.org/substitute-characters-of-a-string-in-r-programming-chartr-function/) para modificar los caracteres únicos requeridos, pues esta función está optimizada para ese proceso.
 
 ```{r limpieza_datatable}
-library(data.table)
 muertes.original <- read_excel("data/muertes_en_costa_rica_2014_2021.xlsx")
 # Se toma el tiempo 10 veces
 (microbenchmark(con.datatable = {
@@ -324,7 +329,6 @@ tiempos.limpieza <- data.frame(
 Se grafican los tiempos de la limpieza.
 
 ```{r tiempo_limpieza}
-library(tidyr)
 # Convertir el formato de ancho a largo
 limpieza.largo <-
   gather(tiempos.limpieza,
@@ -367,9 +371,6 @@ muertes.df$edadsrec <- factor(muertes.df$edadsrec, levels = c("15 - 19", "20 - 2
 Con la limpieza realizada, se procede a realizar el ejercicio de los gráficos. Para esto se usó el paquete [furrr](https://furrr.futureverse.org), este permite realizar ciclos en paralelo, lo cual se puede observar que aumenta en gran medida la [eficiencia](https://github.com/victorcaquilpan/LecturaExcelConR). Se realizan gráficos de barras para las categóricas e histogramas para las numéricas.
 
 ```{r graficos_paralelo}
-library(furrr)
-library(future)
-
 # Definimos la cantidad de gráficos que vamos a generar
 num.graf <- ncol(muertes.df)
 
@@ -465,8 +466,6 @@ ggplot(graficos.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
 Inicialmente, se descarga la base para reemplazar la media móvil en una de sus columnas. Para modificar esta base, se hará un objeto de tipo [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
 
 ```{r dascarga_datos_2}
-library(data.table)
-
 # Se descargan los datos normalmente
 base.salarios <- read_excel("data/Base_salarios.xlsx")
 
@@ -541,9 +540,6 @@ ggplot(tiempos.mediam, aes(x = integrante, y = media_movil)) +
 Similar al ejercicio de media móvil, se inicia descargando la base de datos y se modifica a un objeto de tipo data.table. Luego se crea la función que hace lo deseado y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
 
 ```{r ejercicio_elimcol}
-library(data.table)
-library(readxl)
-
 base.salarios <- read_excel("data/Base_salarios.xlsx")
 
 # base.salarios <- setDT(base.salarios) # Próximamente se harán más pruebas con esto
@@ -609,9 +605,6 @@ ggplot(tiempos.eliminar.columnas, aes(x = integrante, y = tiempo)) +
 Para este ejercicio, se incia realizando la imputación por agrupación de múltiples maneras. Iniciando con data.table.
 
 ```{r funcion_agrupacion}
-library(data.table)
-library(readxl)
-
 base.salarios <- read_excel("data/Base_salarios.xlsx")
 
 microbenchmark(datatable = {
@@ -671,5 +664,144 @@ ggplot(agrupacion.largo, aes(x = integrante, y = tiempo, fill = condicion)) +
   )) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Regresión logística
+
+Inicialmente, descargamos los datos con los que se hará la regresión logística.
+
+```{r descarga_de_la_base}
+datos.diabetes <-
+  read.csv(
+    "C:/Users/mapis/OneDrive/Documents/Universidad/5 - Quinto semestre/Herramientas para las ciencias de datos II/Proyecto grupal/Respaldo/Diabetes.txt"
+  )
+```
+
+Se proceden a crear las funciones necesarias, iniciando con la función de optimización.
+
+```{r fun_optim}
+optimizacion <- function(W, b, X, y, num.iterations, learning.rate) {
+  for (i in 1:num.iterations) {
+    # Variables a optimizar con el descenso del gradiente
+    A <- (1 / (1 + exp(-((
+      X %*% W
+    ) + b))))
+    dW <- (1 / nrow(X)) * (t(X) %*% (A - y))
+    db <- (1 / nrow(X)) * sum(A - y)
+    
+    # Se actualiza el tensor de pesos y el término de sesgo
+    W <- W - (learning.rate * dW)
+    b <- b - (learning.rate * db)
+  }
+  
+  return(list(W, b))
+}
+```
+
+Posteriormente, la función del modelo, en la cual se genera el nivel predictivo del mismo, se optimizan los parámetros y se devuelven los ajustes de entrenamiento y testeo para los datos. 
+
+```{r fun_reg_log}
+regresion.logistica <- function(X.train,
+                                y.train,
+                                X.val,
+                                y.val,
+                                num.iterations = 2000,
+                                learning.rate = 0.5) {
+  # Se optimizan los parámetros
+  params <-
+    optimizacion(
+      W = rep(0, ncol(X)),
+      b = 0,
+      X = X.train,
+      y = y.train,
+      num.iterations = num.iterations,
+      learning.rate = learning.rate
+    )
+  
+  # Predicciones de entrenamiento y validación
+  y.prediction.validation <-
+    as.numeric(((1 / (1 + exp(
+      -((t(params[[1]]) %*% t(X.val)) + params[[2]])
+    )))) > 0.5)
+  y.prediction.train <-
+    as.numeric(((1 / (1 + exp(
+      -((t(params[[1]]) %*% t(X.train)) + params[[2]])
+    )))) > 0.5)
+  
+  # Lista para medir los ajustes de entrenamiento y validacion
+  lista.res <- list()
+  lista.res[[1]] <-
+    (100 - (mean(abs(
+      y.prediction.train - y.train
+    )) * 100))
+  lista.res[[2]] <-
+    (100 - (mean(abs(
+      y.prediction.validation - y.val
+    )) * 100))
+  
+  # Se devuelven los ajustes
+  return(lista.res)
+}
+```
+
+
+Se hace la prueba correspondiente del modelo, para esto, se buscó sobre cómo [separar](https://rpubs.com/jboscomendoza/arboles_decision_clasificacion) los datos de un *DataFrame*.
+
+```{r prueba}
+# Se separan las bases necesarias
+X <- as.matrix(datos.diabetes %>%
+                 select(-Outcome))
+
+y <- unlist(datos.diabetes %>%
+              select(Outcome))
+
+# Se normaliza la X
+X <- (X - min(X)) / (max(X) - min(X))
+
+# Se separan los datos de prueba y los de entrenamiento
+X.train <- sample_frac(as.data.frame(cbind(X, y)), 0.8)
+X.val <- setdiff(as.data.frame(cbind(X, y)), X.train)
+
+# Se extraen los datos necesarios en cada variable
+y.train <- unlist(X.train[, ncol(X.train)])
+y.val <- unlist(X.val[, ncol(X.val)])
+X.train <- as.matrix(X.train[, -ncol(X.train)])
+X.val <- as.matrix(X.val[, -ncol(X.val)])
+
+# Modelo de regresión logística
+(
+  resultado <- regresion.logistica(
+    X.train = X.train,
+    y.train = y.train,
+    X.val = X.val,
+    y.val = y.val,
+    num.iterations = 1000,
+    learning.rate = 0.003
+  )
+)
+```
+
+Una vez conocido el resultado, lo cual confirma que la función sirve, se harán las pruebas de tiempos.
+
+```{r tiempos}
+microbenchmark(
+  reg.log = regresion.logistica(
+    X.train = X.train,
+    y.train = y.train,
+    X.val = X.val,
+    y.val = y.val,
+    num.iterations = 1000,
+    learning.rate = 0.003
+  ),
+  times = 10,
+  unit = "seconds"
+)
+```
+
+```{r tiempos_reg_log}
+tiempos.eliminar.columnas <- data.frame(
+  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
+  tiempo = c(0, 0.06, 0, 0)
+  )
 ```
 
