@@ -381,6 +381,15 @@ num.graf <- ncol(muertes.df)
 plan(multisession)
 
 # Definimos las funciones que generen los gráficos deseados
+
+#' Función que genera un histograma a partir de una columna específica de un DataFrame.
+#' 
+#' @param df DataFrame que contiene los datos.
+#' @param indice_col Índice de la columna o nombre de columna que se utilizará para 
+#' generar el histograma.
+#' 
+#' @return No retorna nada. Genera y muestra un objeto ggplot que representa el 
+#' histograma de la columna especificada.
 fun.histograma <- function(df, indice_col){
   ggplot(data.frame(valor = df[[indice_col]]), aes(x = valor)) +
     geom_histogram(binwidth = 1, fill = "blue", color = "black") +
@@ -388,6 +397,15 @@ fun.histograma <- function(df, indice_col){
     theme_minimal()
 }
 
+#' Función que genera un gráfico de barras a partir de una columna específica de 
+#' un DataFrame.
+#' 
+#' @param df DataFrame que contiene los datos.
+#' @param indice_col Índice de la columna o nombre de columna que se utilizará para 
+#' generar el gráfico.
+#' 
+#' @return No retorna nada. Genera y muestra un objeto ggplot que representa el 
+#' gráfico de barras de la columna especificada.
 fun.barras <- function(df, indice_col){
   ggplot(data.frame(valor = df[[indice_col]]), aes(x = valor)) +
     geom_bar(fill = "skyblue") +
@@ -396,7 +414,12 @@ fun.barras <- function(df, indice_col){
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
-# Definimos una función para identificar cuáles columnas son categóricas
+#' Función que determina si una columna es categórica.
+#' 
+#' @param x Vector o columna del dataframe a evaluar.
+#' 
+#' @return \code{TRUE} si la columna es de tipo \code{character} o \code{factor}, 
+#' \code{FALSE} en caso contrario.
 indices.categoricos <- function(x) is.character(x) || is.factor(x)
 
 # Guardamos los índices correspondientes
@@ -482,7 +505,15 @@ Con el objeto necesario, se probará un método manual, pues las funciones exist
 # Se hace una copia de la columna a copiar
 copia.col <- base.salarios$`Salario base`
 
-# La siguiente función recibe una columna de dataframe o un vector (col.nulos) y la banda con la que se calcula la media móvil
+#' Función que imputa los valores nulos de una columna de un DataFrame o un vector 
+#' usando la media móvil.
+#' 
+#' @param col.nulos Vector o columna de un DataFrame que contiene los valores nulos 
+#' a imputar.
+#' @param banda Número entero que representa el número de elementos adyacentes a 
+#' considerar para calcular la media móvil.
+#' 
+#' @return Vector o columna del DataFrame con los valores nulos imputados usando la media móvil.
 media.movil <- function(col.nulos, banda) {
   # Se obtinenen los índices de los valores nulos y la cantidad de filas
   indices.nulos <- which(is.na(base.salarios$`Salario base`))
@@ -545,11 +576,18 @@ Similar al ejercicio de media móvil, se inicia descargando la base de datos y s
 ```{r eliminar_cols}
 base.salarios <- read_excel("data/Base_salarios.xlsx")
 
-# base.salarios <- setDT(base.salarios) # Próximamente se harán más pruebas con esto
-
-# Función que elimina las columnas de un dataframe en las cuales el porcentaje de valores nulos represanta un porcentaje mayor al indicado por el usuario
+#' Función que elimina las columnas de un DataFrame en las cuales el porcentaje
+#' de valores nulos supera un porcentaje especificado por el usuario.
+#' 
+#' @param df DataFrame del que se quiere eliminar las columnas.
+#' @param porcentaje Número entre 0 y 1 que indica el porcentaje máximo
+#'                   de valores nulos permitido en una columna. Las columnas con
+#'                   un porcentaje de valores nulos mayor que este valor serán eliminadas.
+#'                   
+#' @return DataFrame con las columnas que no superan el porcentaje especificado
+#'         de valores nulos.
 eliminar.columnas <- function(df, porcentaje) {
-  filas <- length(df[[1]]) # Probar nrow
+  filas <- nrow(df)
   i <- 1
   
   while (i <= length(df)) {
@@ -679,6 +717,17 @@ datos.diabetes <- read.csv("data/Diabetes.txt")
 Se proceden a crear las funciones necesarias, iniciando con la función de optimización.
 
 ```{r fun_optim}
+#' Función que realiza la optimización de los pesos (\code{W}) y el sesgo (\code{b}) 
+#' mediante el algoritmo de descenso del gradiente.
+#'
+#' @param W Vector de pesos.
+#' @param b Escalar que representa el sesgo.
+#' @param X Matriz de características de entrada.
+#' @param y Vector de etiquetas objetivo.
+#' @param num.iterations Número de iteraciones para el descenso del gradiente.
+#' @param learning.rate Tasa de aprendizaje para la actualización de los parámetros.
+#' 
+#' @return Lista con los pesos optimizados (\code{W}) y el sesgo optimizado (\code{b}).
 optimizacion <- function(W, b, X, y, num.iterations, learning.rate) {
   for (i in 1:num.iterations) {
     # Variables a optimizar con el descenso del gradiente
@@ -700,10 +749,25 @@ optimizacion <- function(W, b, X, y, num.iterations, learning.rate) {
 Posteriormente, la función del modelo, en la cual se genera el nivel predictivo del mismo, se optimizan los parámetros y se devuelven los ajustes de entrenamiento y testeo para los datos. 
 
 ```{r fun_reg_log}
-regresion.logistica <- function(X.train,
-                                y.train,
-                                X.val,
-                                y.val,
+#' Función que realiza la optimización de parámetros para la regresión logística
+#' utilizando los datos de entrenamiento proporcionados. Luego, realiza predicciones 
+#' sobre los datos de testeo y calcula la precisión del modelo tanto en entrenamiento 
+#' como en testeo.
+#'
+#' @param X.train Matriz de características de entrenamiento.
+#' @param y.train Vector de etiquetas de entrenamiento.
+#' @param X.val Matriz de características de testeo.
+#' @param y.val Vector de etiquetas de testeo.
+#' @param num.iterations Número de iteraciones para la optimización. Por defecto es 2000.
+#' @param learning.rate Tasa de aprendizaje para la optimización. Por defecto es 0.5.
+#'
+#' @return Lista con dos elementos:
+#'   \itemize{
+#'     \item Ajuste de precisión en entrenamiento.
+#'     \item Ajuste de precisión en testeo.
+#'   }
+regresion.logistica <- function(X.train, y.train,
+                                X.val, y.val,
                                 num.iterations = 2000,
                                 learning.rate = 0.5) {
   # Se optimizan los parámetros
@@ -753,7 +817,7 @@ X <- as.matrix(datos.diabetes %>%
 y <- unlist(datos.diabetes %>%
               select(Outcome))
 
-# Se normaliza la X
+# Se normalizan los datos
 X <- (X - min(X)) / (max(X) - min(X))
 
 # Se separan los datos de prueba y los de entrenamiento
@@ -828,20 +892,16 @@ Se inicia con la descarga de los datos, para la base de datos de los empleados s
 qx.hombres <- read_excel("data/Mortalidad_supen.xlsx", sheet = "Sexo_1_limpio")
 ```
 
-Se creará una función para identificar el primer *False* de cada fila de una matriz.
+Se crea una función para cambiar los valores después del primer falso a falso, de una fila dada de una matriz
 
 ```{r fun_false}
+#' Función que recibe un vector booleano (por ejemplo, una fila de una matriz), 
+#' y cambia todos los elementos después del primer FALSE a FALSE.
+#'
+#' @param fila Vector booleano.
+#' 
+#' @return Vector booleano modificado.
 fila.muerte <- function(fila){
-  #' Función que devuelve el índice de un vector una posición antes de un falso.
-  #'
-  #' Calcula el índice de la \code{fila} de una matriz una posición antes de que
-  #' el individuo fallezca.
-  #'
-  #' @param fila (Numeric) Vector o fila de una matriz de booleanos o de 1 y 0.
-  #'
-  #' @return (Numeric) Índice, una posición antes, de donde se encuentre un
-  #' falso.
-  #'
   fila[(which(!fila)[1] + 1):length(fila)] <- FALSE
   return(fila)
 }
@@ -901,6 +961,16 @@ lista.primash[[1]] <- (benh / anh)
 Posteriormente, se realiza la función que se encarga de las demás iteraciones del modelo estocástico.
 
 ```{r siguientes_iteraciones}
+#' Función que implementa un modelo estocástico iterativo para calcular las primas.
+#' La función realiza iteraciones mientras la diferencia absoluta entre el promedio 
+#' de primas y la media de las primas en la lista sea mayor que 0.001.
+#'
+#' @param matriz.prob Matriz de probabilidades de sobrevivencia.
+#' @param prom.primas Promedio de las primas calculadas.
+#' @param lista.primas Lista con las primas calculadas en la primera iteración.
+#'
+#' @return Lista con las primas calculadas en cada iteración.
+#'
 modelo.estocastico <- function(matriz.prob, prom.primas, lista.primas){
   while (abs(prom.primas - mean(unlist(lista.primas))) > 0.001) {
     
@@ -974,6 +1044,12 @@ ggplot(tiempos.estocast, aes(x = integrante, y = tiempo)) +
 ## Producto acumulado
 
 ```{r producto_acumulado_cumprod}
+#' Función que calcula el producto acumulado de un vector dado usando la función 
+#' cumprod de R.
+#' 
+#' @param vector Vector numérico.
+#' 
+#' @return Vector con el producto acumulado de los elementos del vector dado.
 prod.acum.cumprod <- function(vector) {
   return(cumprod(vector))
 }
@@ -987,6 +1063,11 @@ microbenchmark(prod.acum.cumprod(runif(
 ```
 
 ```{r producto_acumulado_sapply}
+#' Función que calcula el producto acumulado de un vector dado usando sapply.
+#' 
+#' @param vector Vector numérico.
+#' 
+#' @return Vector con el producto acumulado de los elementos del vector dado.
 prod.acum.sapply <- function(vector) {
   return(sapply(1:length(vector), function(i)
     prod(vector[1:i])))
@@ -1015,6 +1096,13 @@ principito <- read_file("data/El_principito.txt")
 ```
 
 ```{r cifrado_cesar_chartr}
+#' Función que cifra un texto dado utilizando la función chartr de R,
+#' aplicando un desplazamiento específico en el alfabeto.
+#' 
+#' @param texto Texto que se desea cifrar.
+#' @param desplazamiento Número entero que indica el desplazamiento en el alfabeto.
+#' 
+#' @return Texto cifrado utilizando el método chartr.
 cifrado.chartr <- function(texto, desplazamiento) {
   # Definir el alfabeto
   alfabeto_minusculas <- "abcdefghijklmnopqrstuvwxyz"
@@ -1059,6 +1147,16 @@ microbenchmark(cifrado.chartr(principito, 5), times = 10, unit = "seconds")
 ```
 
 ```{r cifrado_cesar_stringi}
+#' Función que cifra un texto desplazando cada letra según un número dado.
+#' Funciona tanto para letras minúsculas como mayúsculas manteniendo la 
+#' estructura y el caso original del texto.
+#'
+#' @param texto Texto que se desea cifrar.
+#' @param desplazamiento Número entero que indica cuántas posiciones desplazar
+#' cada letra. Puede ser positivo (desplazamiento a la derecha) o negativo
+#' (desplazamiento a la izquierda).
+#'
+#' @return Texto cifrado según el desplazamiento especificado.
 cifrado.stringi <- function(texto, desplazamiento) {
   # Función para desplazar letras
   desplazar <- function(letra, desplazamiento) {
@@ -1118,6 +1216,8 @@ tiempos.cifrado.cesar <- data.frame(
   stringi = c(0, 2.46	, 1.3, 0)
 )
 ```
+
+
 
 
 
