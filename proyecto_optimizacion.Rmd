@@ -1127,7 +1127,35 @@ Similar al ejercicio de media móvil, se inicia descargando la base de datos. Lu
 base.salarios <- leer.excel("data/Base_salarios.xlsx")
 ```
 
-```{r fun_eliminar_cols}
+```{r fun_eliminar_cols_df}
+#' Función que elimina las columnas de un DataFrame en las cuales el porcentaje
+#' de valores nulos supera un porcentaje especificado por el usuario.
+#' 
+#' @param df DataFrame del que se quiere eliminar las columnas.
+#' @param porcentaje Número entre 0 y 1 que indica el porcentaje máximo
+#'                   de valores nulos permitido en una columna. Las columnas con
+#'                   un porcentaje de valores nulos mayor que este valor serán eliminadas.
+#'                   
+#' @return DataFrame con las columnas que no superan el porcentaje especificado
+#'         de valores nulos.
+eliminar.columnas.df <- function(df, porcentaje) {
+  filas <- nrow(df)
+  i <- 1
+  
+  while (i <= length(df)) {
+    cantidad_na <- sum(is.na(df[[i]]))
+    
+    if ((cantidad_na / filas) > porcentaje) {
+      df <- subset(df, select = -i)
+    } # fin if
+    
+    i <- i + 1
+  } # fin while i
+  return(df)
+}
+```
+
+```{r fun_eliminar_cols_dt}
 #' Función que elimina las columnas de un DataFrame que tienen un porcentaje
 #' de valores nulos superior a un porcentaje especificado. Para esto, se convierte
 #' el DataFrame dado a un DataTable.
@@ -1137,13 +1165,13 @@ base.salarios <- leer.excel("data/Base_salarios.xlsx")
 #' columna se elimina. Debe ser un valor entre 0 y 1.
 #'
 #' @return DataTable que corresponde al DataFrame original con las columnas eliminadas
-eliminar.columnas <- function(df, porcentaje) {
+eliminar.columnas.dt <- function(df, porcentaje) {
   
   # Se convierte el DataFrame a DataTable
   base.dt <- setDT(df)
   
   # Número de filas del DataTable
-  filas <- nrow(base.dt)
+  filas <- base.dt[, .N]
   
   # Lista para almacenar las columnas a eliminar
   columnas_eliminar <- c()
@@ -1168,43 +1196,40 @@ eliminar.columnas <- function(df, porcentaje) {
 
 Prueba de la función y tiempo promedio de ejecución.
 
-```{r tiempos_eliminar_cols}
-calcular.tiempos(function() eliminar.columnas(base.salarios, 0.01))
+```{r tiempos_eliminar_cols_df}
+calcular.tiempos(function() eliminar.columnas.df(base.salarios, 0.01))
 ```
 
-```{r tiempos_eliminar_cols}
-prueba.1 <- eliminar.columnas(base.salarios, 0.1)
-
-# Como se puede ver, en ninguna columna del DataFrame se presenta una cantidad de valores nulos mayor al 10%, por lo que se procede a probar la función con un porcentaje de 1% para que se eliminen 4 columnas y se pueda ver mejor el tiempo de ejecución de la función
-
-prueba.2 <- eliminar.columnas(base.salarios, 0.01)
-
-# Ahora se procede a determinar el tiempo promedio de ejecución (en segundos) de hacer el proceso 10 veces
-(microbenchmark(eliminar.columnas(base.salarios, 0.01), times = 10))
+```{r tiempos_eliminar_cols_dt}
+calcular.tiempos(function() eliminar.columnas.dt(base.salarios, 0.01))
 ```
 
 Por último, se hace un DataFrame con los tiempos de ejecución de cada integrante.
 
-```{r df_tiempos_eliminar_cols}
-tiempos.eliminar.columnas <- data.frame(
-  integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
-  tiempo = c((402.6) / 1000000, (766.26) / 1000000, (3569.87) / 1000000, (5.604471)/1000 )
+```{r df_elimcol}
+tiempos.eliminar.columnas <-
+  df.tiempos.elimcol(
+    c((975.28) / 1000000,
+      (766.26) / 1000000,
+      (3569.87) / 1000000,
+      (5.604471) / 1000
+    ),
+    c(0, 0.001, 0, 0),
+    c("Eyeri", "Santiago", "Paula", "Alejandro")
   )
 ```
 
 En gráfico.
 
-```{r graf_eliminar_cols}
-ggplot(tiempos.eliminar.columnas, aes(x = integrante, y = tiempo)) +
-  geom_col(fill = "darkolivegreen3") +
-  labs(
-    x = "Integrante",
-    y = "Tiempo (segundos)",
-    title = "Tiempos de la eliminación de columnas",
-    caption = "Fuente: elaboración propia"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```{r grafico_elimcol}
+graficos.dobles.elimcols(
+  tiempos.eliminar.columnas,
+  "Tiempo de eliminación de columnas",
+  c(
+    "Con datatable" = "indianred3",
+    "Sin datatable" = "hotpink2"
+  )
+)
 ```
 
 ### Imputación por agrupación
