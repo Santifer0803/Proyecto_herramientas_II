@@ -201,7 +201,6 @@ df.tiempos.imputacion <-
 ```{r fun_lectura_excel}
 #' Función que extrae un archivo de excel
 #' 
-#' 
 #' @param ruta (Character) Ruta al archivo de excel correspondiente
 #' 
 #' @return NuLL
@@ -464,6 +463,12 @@ creacion.matriz <- function(dimensiones = 10000) {
 ```
 
 ```{r fun_operacion_matricial}
+#' Función que eleva cada elemento de una matriz a la potencia 100, multiplica cada 
+#' elemento resultante por 10 y luego a cada uno le suma 5.
+#'
+#' @param matriz Matriz numérica.
+#' @return Matriz con los mismos dimensiones que la dada, donde cada elemento ha 
+#' sido transformado según la operación mencionada.
 operacion.matricial <- function(matriz) {
   return(((matriz ^ 100) * 10) + 5)
 }
@@ -1119,37 +1124,48 @@ graficos.simples(tiempos.mediam, "darkorchid2", "Tiempos de imputación por medi
 
 ### Eliminación de columnas por porcentaje de valores nulos
 
-Similar al ejercicio de media móvil, se inicia descargando la base de datos y se modifica a un objeto de tipo data.table. Luego se crea la función que hace lo deseado y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
+Similar al ejercicio de media móvil, se inicia descargando la base de datos. Luego, se crea la función que hace lo deseado, la cual modifica el DataFrame a un objeto de tipo DataTable, y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
 
 ```{r setup_eliminar_nulos}
 base.salarios <- leer.excel("data/Base_salarios.xlsx")
 ```
 
 ```{r fun_eliminar_cols}
-#' Función que elimina las columnas de un DataFrame en las cuales el porcentaje
-#' de valores nulos supera un porcentaje especificado por el usuario.
-#' 
-#' @param df DataFrame del que se quiere eliminar las columnas.
-#' @param porcentaje Número entre 0 y 1 que indica el porcentaje máximo
-#'                   de valores nulos permitido en una columna. Las columnas con
-#'                   un porcentaje de valores nulos mayor que este valor serán eliminadas.
-#'                   
-#' @return DataFrame con las columnas que no superan el porcentaje especificado
-#'         de valores nulos.
+#' Función que elimina las columnas de un DataFrame que tienen un porcentaje
+#' de valores nulos superior a un porcentaje especificado. Para esto, se convierte
+#' el DataFrame dado a un DataTable.
+#'
+#' @param df DataFrame del cual se eliminarán las columnas.
+#' @param porcentaje Porcentaje límite de valores nulos para determinar si una
+#' columna se elimina. Debe ser un valor entre 0 y 1.
+#'
+#' @return DataTable que corresponde al DataFrame original con las columnas eliminadas
 eliminar.columnas <- function(df, porcentaje) {
-  filas <- nrow(df)
-  i <- 1
   
-  while (i <= length(df)) {
-    cantidad_na <- sum(is.na(df[[i]]))
+  # Se convierte el DataFrame a DataTable
+  base.dt <- setDT(df)
+  
+  # Número de filas del DataTable
+  filas <- nrow(base.dt)
+  
+  # Lista para almacenar las columnas a eliminar
+  columnas_eliminar <- c()
+  
+  # Se itera sobre las columnas
+  for (columna in names(base.dt)) {
+    cantidad_na <- sum(is.na(base.dt[[columna]]))
     
     if ((cantidad_na / filas) > porcentaje) {
-      df <- subset(df, select = -i)
-    } # fin if
-    
-    i <- i + 1
-  } # fin while i
-  return(df)
+      columnas_eliminar <- c(columnas_eliminar, columna)
+    }
+  }
+  
+  # Se eliminan las columnas
+  if (length(columnas_eliminar) > 0) {
+    base.dt[, (columnas_eliminar) := NULL]
+  }
+  
+  return(base.dt)
 }
 ```
 
@@ -1159,11 +1175,10 @@ Prueba de la función y tiempo promedio de ejecución.
 calcular.tiempos(function() eliminar.columnas(base.salarios, 0.01))
 ```
 
-
 ```{r tiempos_eliminar_cols}
 prueba.1 <- eliminar.columnas(base.salarios, 0.1)
 
-# Como se puede ver, en ninguna columna del dataframe se presenta una cantidad de valores nulos mayor al 10%, por lo que se procede a probar la función con un porcentaje de 1% para que se eliminen al menos 2 columnas y se pueda ver mejor el tiempo de ejecución de la función
+# Como se puede ver, en ninguna columna del DataFrame se presenta una cantidad de valores nulos mayor al 10%, por lo que se procede a probar la función con un porcentaje de 1% para que se eliminen 4 columnas y se pueda ver mejor el tiempo de ejecución de la función
 
 prueba.2 <- eliminar.columnas(base.salarios, 0.01)
 
@@ -1176,7 +1191,7 @@ Por último, se hace un DataFrame con los tiempos de ejecución de cada integran
 ```{r df_tiempos_eliminar_cols}
 tiempos.eliminar.columnas <- data.frame(
   integrante = c("Eyeri", "Santiago", "Paula", "Alejandro"), 
-  tiempo = c((975.28) / 1000000, (766.26) / 1000000, (3569.87) / 1000000, (5.604471)/1000 )
+  tiempo = c((402.6) / 1000000, (766.26) / 1000000, (3569.87) / 1000000, (5.604471)/1000 )
   )
 ```
 
@@ -1204,6 +1219,15 @@ base.salarios <- leer.excel("data/Base_salarios.xlsx")
 ```
 
 ```{r fun_agrupacion_dt}
+#' Función que convierte un DataFrame a un DataTable y realiza la imputación 
+#' de los valores nulos en la columna "Salario base" usando la media de los 
+#' valores presentes, agrupados por "Género" y "Grado de estudio".
+#'
+#' @param df DataFrame que contiene al menos las columnas "Género", "Grado de estudio" 
+#' y "Salario base".
+#'
+#' @return DataTable con la misma estructura que el DataFrame original, pero con 
+#' los valores nulos en "Salario base" imputados.
 agrupacion.dt <- function(df) {
   base.dt <- setDT(df)
   
@@ -1216,6 +1240,15 @@ agrupacion.dt <- function(df) {
 ```
 
 ```{r fun_agrupacion_df}
+#' Función que agrupa un DataFrame por "Género" y "Grado de estudio" y, 
+#' dentro de cada grupo, reemplaza los valores NA en la columna "Salario base" con 
+#' la media de "Salario base" de ese grupo.
+#'
+#' @param df DataFrame que contiene las columnas "Género", "Grado de estudio" y 
+#' "Salario base".
+#' 
+#' @return DataFrame con los valores NA en "Salario base" reemplazados por la media 
+#' de "Salario base" dentro de cada grupo.
 agrupacion.df <- function(df) {
   res.dp <- df %>%
     group_by(Género, `Grado de estudio`) %>%
@@ -1623,4 +1656,5 @@ Gráfico del modelo estocástico.
 ```{r grafico_modelo_estocástico}
 graficos.simples(tiempos.estocast, "pink2", "Tiempos del modelo estocástico")
 ```
+
 
