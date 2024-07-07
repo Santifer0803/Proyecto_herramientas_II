@@ -1173,7 +1173,7 @@ eliminar.columnas.dt <- function(df, porcentaje) {
   # Número de filas del DataTable
   filas <- base.dt[, .N]
   
-  # Lista para almacenar las columnas a eliminar
+  # Vector para almacenar las columnas a eliminar
   columnas_eliminar <- c()
   
   # Se itera sobre las columnas
@@ -1209,12 +1209,8 @@ Por último, se hace un DataFrame con los tiempos de ejecución de cada integran
 ```{r df_elimcol}
 tiempos.eliminar.columnas <-
   df.tiempos.elimcol(
-    c((975.28) / 1000000,
-      (766.26) / 1000000,
-      (3569.87) / 1000000,
-      (5.604471) / 1000
-    ),
-    c(0, 0.001, 0, 0.002),
+    c(0.00170, 0.00181, 0.00510, 0.00397),
+    c(0.00186, 0.00125, 0.01990, 0.00150),
     c("Eyeri", "Santiago", "Paula", "Alejandro")
   )
 ```
@@ -1480,7 +1476,7 @@ Los tiempos de la regresión logística.
 
 ```{r tiempos_reg_log}
 tiempos.regresion.log <-
-  df.tiempos.simples(c(0.08, 0.06, 0, 0.23), c("Eyeri", "Santiago", "Paula", "Alejandro"))
+  df.tiempos.simples(c(0.08, 0.06, 017, 0.23), c("Eyeri", "Santiago", "Paula", "Alejandro"))
 ```
 
 Gráfico de la regresión logística.
@@ -1515,7 +1511,7 @@ fila.muerte <- function(fila){
 Primera iteración del modelo.
 
 ```{r primera_iteracion_modelo_estocast}
-# Lista para resultados
+# Lista para las primas
 lista.primash <- list()
 
 # Tasa equivalente
@@ -1679,3 +1675,7 @@ Gráfico del modelo estocástico.
 ```{r grafico_modelo_estocástico}
 graficos.simples(tiempos.estocast, "pink2", "Tiempos del modelo estocástico")
 ```
+
+
+
+
