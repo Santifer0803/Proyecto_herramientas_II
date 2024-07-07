@@ -261,7 +261,7 @@ graficos.simples <- function(df, color, titulo){
   ggplotly(fig, width = 800, height = 500)
 }
 ```
-    
+
 ```{r grafico_doble_prodacum}
 #' Función que crea un gráfico de barras interactivo con el color y título
 #' deseados, recibe un DataFrame de la función df.tiempos.
@@ -441,9 +441,9 @@ graficos.dobles.imputacion <- function(df, titulo, colores) {
 
 Inicialmente se intentaron usar librerías como Matrix, bigmemory, LAPLACK, BLAS, bigalgebra o expm, pero algunas de estas requieren de una instalación externa y más compleja que una librería común y corriente, además de que dichas librerías no optimizan la multiplicación elemento a elemento sino que optimizan el calculo matricial de matrices, o se especializan en otros tipos de procedimientos con matrices, lo cual no es lo que se quiere en este ejercicio.
 
-Esto quiere decir que, por ejemplo, al hacer A %^% 2 o, lo que es lo mismo, A %*% A, se hace la multiplicación matricial de A con A y no la multiplicación elemento a elemento de A con A, que es lo deseado. También se intentó paralelizar el código usando las librerías doParallel y foreach, pero resultó ser bastante más ineficiente hacer esto que hacerlo por defecto.
+Esto quiere decir que, por ejemplo, al hacer A %\^% 2 o, lo que es lo mismo, A %\*% A, se hace la multiplicación matricial de A con A y no la multiplicación elemento a elemento de A con A, que es lo deseado. También se intentó paralelizar el código usando las librerías doParallel y foreach, pero resultó ser bastante más ineficiente hacer esto que hacerlo por defecto.
 
-Así, se decidió que la mejor manera de hacer este ejercicio es hacerlo con lo que trae R por defecto; es decir, crear una matriz con matrix() y utilizar el operador ^ para elevar a la 100 elemento a elemento, así como * y + para multiplicarla por 10 y sumarle 5, respectivamente.
+Así, se decidió que la mejor manera de hacer este ejercicio es hacerlo con lo que trae R por defecto; es decir, crear una matriz con matrix() y utilizar el operador \^ para elevar a la 100 elemento a elemento, así como \* y + para multiplicarla por 10 y sumarle 5, respectivamente.
 
 Si bien el tiempo de ejecución puede parecer alto, es lo mejor que se pudo encontrar que está a nuestro alcance.
 
@@ -481,7 +481,6 @@ matriz <- creacion.matriz()
 ```{r tiempos_operacion_matricial}
 calcular.tiempos(function() operacion.matricial(matriz))
 ```
-
 
 Se guarda el tiempo de las matrices.
 
@@ -536,8 +535,8 @@ calcular.tiempos(function()
 
 ```{r tiempos_producto_acumulado}
 tiempos.producto.acumulado <- df.tiempos.prodacum(
-  c(0.001, 0.01, 0.006, 0),
-  c(27.93, 44.54, 27.82, 0),
+  c(0.001, 0.01, 0.006, 0.02),
+  c(27.93, 44.54, 27.82, 115.22),
   c("Santiago", "Paula", "Eyeri", "Alejandro")
 )
 ```
@@ -675,8 +674,8 @@ calcular.tiempos(function() cifrado.stringi(principito, 5))
 
 ```{r tiempos_cifrado_texto}
 tiempos.texto <- df.tiempos.texto(
-  c(0.012, 0.02, 0.016, 0),
-  c(1.25, 2.46	, 1.3, 0),
+  c(0.012, 0.02, 0.016, 0.044),
+  c(1.25, 2.46	, 1.3, 3.44),
   c("Santiago", "Paula", "Eyeri", "Alejandro")
 )
 ```
@@ -929,7 +928,6 @@ limpieza.df <- function(df) {
 }
 ```
 
-
 ```{r tiempos_limpieza_df}
 calcular.tiempos(function() limpieza.df(muertes.original))
 ```
@@ -969,7 +967,6 @@ Se ordena la columna de grupo etario.
 ```{r limpieza_para_graficos}
 muertes.df <- limpieza.df(muertes.original)
 ```
-
 
 ```{r ordenar_rango_etario}
 muertes.df$edadsrec <- factor(muertes.df$edadsrec, levels = c("15 - 19", "20 - 24", "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49", "50 - 54", "55 - 59", "60 - 64", "65 - 69", "70 - 74", "75 - 79", "80 - 84", "85 - 89", "90 - 94", "95 - 99", "100 - 121"))
@@ -1124,7 +1121,7 @@ graficos.simples(tiempos.mediam, "darkorchid2", "Tiempos de imputación por medi
 
 ### Eliminación de columnas por porcentaje de valores nulos
 
-Similar al ejercicio de media móvil, se inicia descargando la base de datos. Luego, se crea la función que hace lo deseado, la cual modifica el DataFrame a un objeto de tipo DataTable, y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa. 
+Similar al ejercicio de media móvil, se inicia descargando la base de datos. Luego, se crea la función que hace lo deseado, la cual modifica el DataFrame a un objeto de tipo DataTable, y se mide el tiempo promedio de ejecución usando microbenchmark. Esta función ya hace lo requerido en un tiempo considerablemente rápido, por lo que si fuera posible mejorar el tiempo de ejecución no habría una diferencia significativa.
 
 ```{r setup_eliminar_nulos}
 base.salarios <- leer.excel("data/Base_salarios.xlsx")
@@ -1339,7 +1336,7 @@ optimizacion <- function(W, b, X, y, num.iterations, learning.rate) {
 }
 ```
 
-Posteriormente, la función del modelo, en la cual se genera el nivel predictivo del mismo, se optimizan los parámetros y se devuelven los ajustes de entrenamiento y testeo para los datos. 
+Posteriormente, la función del modelo, en la cual se genera el nivel predictivo del mismo, se optimizan los parámetros y se devuelven los ajustes de entrenamiento y testeo para los datos.
 
 ```{r fun_reg_log}
 #' Función que realiza la optimización de parámetros para la regresión logística
@@ -1458,7 +1455,7 @@ Los tiempos de la regresión logística.
 
 ```{r tiempos_reg_log}
 tiempos.regresion.log <-
-  df.tiempos.simples(c(0.08, 0.06, 0, 0), c("Eyeri", "Santiago", "Paula", "Alejandro"))
+  df.tiempos.simples(c(0.08, 0.06, 0, 0.23), c("Eyeri", "Santiago", "Paula", "Alejandro"))
 ```
 
 Gráfico de la regresión logística.
@@ -1642,12 +1639,13 @@ primas.estocasticash <-
   modelo.estocastico(matriz.probh, 0, lista.primash)
 fin <- Sys.time()
 print(((fin - ini) * 60) / length(primas.estocasticash))
+
 ```
 
 Tiempos del modelo estocástico.
 
 ```{r tiempos_modelo_estocastico}
-tiempos.estocast <- df.tiempos.simples(c(0.032, 0.046, 0, 0),
+tiempos.estocast <- df.tiempos.simples(c(0.032, 0.046, 0, 0.124),
                                        c("Eyeri", "Santiago", "Paula", "Alejandro"))
 ```
 
@@ -1656,5 +1654,3 @@ Gráfico del modelo estocástico.
 ```{r grafico_modelo_estocástico}
 graficos.simples(tiempos.estocast, "pink2", "Tiempos del modelo estocástico")
 ```
-
-
