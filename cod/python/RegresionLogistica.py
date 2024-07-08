@@ -1,5 +1,5 @@
 from numba import jit
-import numoy as np
+import numpy as np
 from sklearn.model_selection import train_test_split
 from Madre import Madre
 
