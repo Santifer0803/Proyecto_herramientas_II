@@ -1,7 +1,25 @@
 
 class GenerarGraficos:
   
-  def __init__(self):
+  """
+  Clase que representa la generación de gráficos a partir de un DataFrame.
+  
+  Attributes
+  ----------
+  df: pandas.DataFrame
+      DataFrame que contiene los datos para el o los gráficos.
+  
+  Methods
+  -------
+  barras(self, variable_x, variable_y, titulo)
+      Genera y muestra un gráfico de barras a partir del DataFrame actual y dos de sus columnas.
+  
+  barras_agrupadas(self, variable_x, variable_y1, variable_y2, nombres_leyendas, titulo)
+      Genera y muestra un gráfico de barras agrupadas a partir del DataFrame actual y tres de sus columnas.
+  """
+  
+  # Constructor
+  def __init__(self, df):
 
     """
     Constructor de la clase GenerarGraficos. Inicializa una nueva instancia
@@ -9,24 +27,76 @@ class GenerarGraficos:
 
     Parameters:
     -----------
-    None
+    df: pandas.DataFrame
+        DataFrame que contiene los datos para el o los gráficos.
              
     Returns:
     --------
     None
     """
     
-  def barras(self, df, variable_x, variable_y, num_ejercicio):
+    self.__df = df.copy()
     
+  # Get
+  @property
+  def df(self):
+    """
+    Método get de la clase GenerarGraficos
+        
+    Parameters:
+    ---------
+    None
+        
+    Returns:
+    -----
+    df: pandas.DataFrame
+        DataFrame actual que contiene los datos para el o los gráficos.
+    """
+    return self.__df
+    
+    
+  # Set
+  @df.setter
+  def df(self, nuevo_df):
+    """
+    Método set de la clase GenerarGraficos
+        
+    Parameters:
+    ---------
+    nuevo_df: pandas.DataFrame
+              Nuevo DataFrame con los datos para el o los gráficos.
+        
+    Returns:
+    -----
+    None
+    Cambia el atributo vectores de un objeto de la clase Matriz
+    """
+    self.__df = nuevo_df
+    
+  # str
+  def __str__(self):
+    """
+    Devuelve una representación legible en forma de cadena de la
+    instancia de la clase
+        
+    Parameters:
+    -----------
+    None
+               
+    Returns:
+    -------
+      str: Texto que describe los atributos de la instancia.
+    """
+    return f'DataFrame actual: {self.__df}'
+    
+  def barras(self, variable_x, variable_y, titulo):
     
     """
-    Método que genera y muestra un gráfico de barras a partir de un DataFrame
-    dado y 2 de sus columnas.
+    Método que genera y muestra un gráfico de barras a partir del DataFrame actual
+    y 2 de sus columnas.
 
     Parameters:
     -----------
-    df: pandas.DataFrame
-        DataFrame que contiene los datos para el gráfico.
                           
     variable_x: str
                 Nombre de la columna en el DataFrame que se utilizará como 
@@ -36,16 +106,16 @@ class GenerarGraficos:
                 Nombre de la columna en el DataFrame que se utilizará como 
                 la variable en el eje y.
                 
-    num_ejercicio: int
-                   numero del ejercicio a mostrar en el título del gráfico.
+    titulo: str
+            título que tendrá el gráfico
              
     Returns:
     --------
     None
     """
     
-    fig = px.bar(df, x = variable_x, y = variable_y, color_discrete_sequence = ["#1f77b4"],
-    title = f'Tiempos de ejecución por integrante - Ejercicio {num_ejercicio}')
+    fig = px.bar(self.__df, x = variable_x, y = variable_y, 
+                 color_discrete_sequence = ["#1f77b4"], title = titulo)
     
     fig.update_layout(
       
@@ -57,18 +127,16 @@ class GenerarGraficos:
       
     fig.show()
 
-  def barras_agrupadas(self, df, variable_x, variable_y1, variable_y2, 
-  nombres_leyendas, num_ejercicio):
+  def barras_agrupadas(self, variable_x, variable_y1, variable_y2, 
+  nombres_leyendas, titulo):
     
     
     """
-    Método que genera y muestra un gráfico de barras agrupadas a partir de un 
-    DataFrame dado y 3 de sus columnas.
+    Método que genera y muestra un gráfico de barras agrupadas a partir del
+    DataFrame actual y 3 de sus columnas.
 
     Parameters:
     -----------
-    df: pandas.DataFrame
-        DataFrame que contiene los datos para el gráfico.
                           
     variable_x: str
                 Nombre de la columna en el DataFrame que se utilizará como 
@@ -88,21 +156,22 @@ class GenerarGraficos:
                       de la leyenda y los siguientes elementos serán los nombres de 
                       las categorías.
                 
-    num_ejercicio: int
-                   numero del ejercicio a mostrar en el título del gráfico.
+    titulo: str
+            título que tendrá el gráfico
              
     Returns:
     --------
     None
     """
     
-    df_mod = df.melt(id_vars = [variable_x], value_vars = [variable_y1, variable_y2],
-                     var_name = 'Variable', value_name = 'Valor')
+    df_mod = self.__df.melt(id_vars = [variable_x], 
+                            value_vars = [variable_y1, variable_y2], 
+                            var_name = 'Variable', value_name = 'Valor')
 
     fig = px.bar(df_mod, x = variable_x, y = 'Valor', color = 'Variable', 
-    barmode = 'group', color_discrete_map = {variable_y1: '#1f77b4', 
-    variable_y2: '#ff7f0e'},
-    title = f'Tiempos de ejecución por integrante - Ejercicio {num_ejercicio}')
+                 barmode = 'group', 
+                 color_discrete_map = {variable_y1: '#1f77b4', variable_y2: '#ff7f0e'},
+                 title = titulo)
     
     fig.update_layout(
       
@@ -118,6 +187,9 @@ class GenerarGraficos:
       trace.name = nombres_leyendas[i+1]
       
     fig.show()
+
+
+
 
 
 
