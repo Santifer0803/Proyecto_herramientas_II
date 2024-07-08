@@ -283,6 +283,28 @@ graficos.dobles.limpieza(
 )
 ```
 
+```{python objeto TrabajoDataframes Muertes}
+obj_Muertes = TrabajoDataframes('data/Muertes_costa_rica.xlsx')
+```
+
+```{python medir limpieza}
+obj_Muertes.medir_tiempo("limpiar_datos()")
+```
+
+```{python objeto GenerarDataframes}
+obj_generadordf = GenerarDataframes(['Alejandro', 'Eyeri', 'Santiago', 'Paula'])
+```
+
+```{python limpieza tiempos}
+df_limpieza = obj_generadordf.tiempos_simples([2.288, 0.828, 0.798, 1.972])
+```
+
+```{python grafico limpieza}
+GenerarGraficos(df_limpieza).barras('integrante', 'tiempo','Tiempos Limpieza de Datos')
+```
+
+
+
 ### Gráficos en paralelo
 
 Para este ejercicio, primero se realiza la limpieza de la base de datos 'muertes.original'. Posteriormente, se procede a realizar el ejercicio de los gráficos. Para esto se usó el paquete [furrr](https://furrr.futureverse.org), este permite realizar ciclos en paralelo, lo cual se puede observar que aumenta en gran medida la [eficiencia](https://github.com/victorcaquilpan/LecturaExcelConR). Se realizan gráficos de barras para las categóricas e histogramas para las numéricas.
@@ -336,6 +358,25 @@ graficos.dobles.graf(
 )
 ```
 
+```{python objeto TrabajoDataframes Muertes limpias}
+muertes_limpias = TrabajoDataframes('Muertes_costa_rica.xlsx').limpiar_datos()
+obj_Muertes_limpias = TrabajoDataframes(0)
+obj_Muertes_limpias.dataframe = muertes_limpias
+```
+
+```{python medir tiempo graficos paralelo}
+obj_Muertes.medir_tiempo("generar_graficos()")
+```
+
+```{python tiempos graficos paralelo}
+df_limpieza = ob_gen_limpieza.tiempos_simples([9.71, 8.28, 8.36, 17.07])
+```
+
+```{python grafico graficos en paralelo}
+GenerarGraficos(df_limpieza).barras('integrante', 'tiempo','Graficos en paralelo')
+```
+
+
 ### Media móvil
 
 Para este ejercicio, se probará un método manual, pues las funciones existentes devuelven aún más nulos de los que hay en el vector original. Para realizar este proceso más rápido se probó a paralelizar el código, pero esto resultó más ineficiente que la versión final.
@@ -377,6 +418,22 @@ En un gráfico.
 graficos.simples(tiempos.mediam,
                  "darkorchid2",
                  "Tiempos de imputación por media móvil")
+```
+
+```{python objeto TrabajoDataframes Base Salarios}
+obj_Base_salarios = TrabajoDataframes('Base_salarios.xlsx')
+```
+
+```{python medir prom movil}
+obj_Base_salarios.medir_tiempo("imputar_por_prom_movil('Salario base')")
+```
+
+```{python tiempos prom movil}
+df_movil = obj_generadordf.tiempos_simples([0.053, 0.034, 0.055, 0.198])
+```
+
+```{python grafico prom movil}
+GenerarGraficos(df_movil).barras('integrante', 'tiempo','Tiempos Imputacion por Media Movil')
 ```
 
 ### Eliminación de columnas por porcentaje de valores nulos
@@ -429,6 +486,19 @@ graficos.dobles.elimcols(
     "Sin datatable" = "hotpink2"
   )
 )
+```
+
+
+```{python medir eliminar cols}
+obj_Base_salarios.medir_tiempo("eliminar_columnas_por_nulos(0.01)")
+```
+
+```{python tiempos eliminar cols}
+df_elimi_col = obj_generadordf.tiempos_simples([0.0071, 0.0019, 0.0035, 0.0075])
+```
+
+```{python grafico eliminar cols}
+GenerarGraficos(df_elimi_col).barras('integrante', 'tiempo','Tiempos Eliminacion de columnas por valores nulos')
 ```
 
 ### Imputación por agrupación
@@ -490,6 +560,18 @@ graficos.dobles.imputacion(
     "Dplyr" = "firebrick3"
   )
 )
+```
+
+```{python medir impu agrupacion}
+obj_Base_salarios.medir_tiempo("imputar_por_agrupacion()")
+```
+
+```{python tiempos impu agrupacion}
+df_agrupacion = obj_generadordf.tiempos_simples([0.067, 0.022, 0.021, 0,052])
+```
+
+```{python grafico impu agrupacion}
+GenerarGraficos(df_agrupacion).barras('integrante', 'tiempo','Imputacion por agrupacion')
 ```
 
 ## Aplicaciones prácticas
