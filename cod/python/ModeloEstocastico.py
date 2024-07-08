@@ -1,9 +1,13 @@
-class ModeloEstocastico:
+import Madre from Madre
+
+class ModeloEstocastico(Madre):
     """
     Clase para modelar y calcular primas estocásticas basadas en tablas de mortalidad y sobrevivencia.
 
     Attributes
     ----------
+    ruta : str
+        Una cadena de texto con una ruta de un archivo
     qx_hombres : pandas.DataFrame
         Tabla de mortalidad de hombres.
     px_hombres : numpy.ndarray
@@ -19,13 +23,13 @@ class ModeloEstocastico:
         Calcula el tiempo promedio en segundos que tarda en ejecutarse el modelo.
     """
     
-    def __init__(self, ruta_mortalidad, hoja):
+    def __init__(self, ruta, hoja):
         """
         Constructor de la clase ModeloEstocastico
         
         Parameters
         ----------
-        ruta_mortalidad : str
+        ruta : str
             Ruta al archivo Excel que contiene la tabla de mortalidad.
         hoja : str
             Nombre de la hoja en el archivo Excel que contiene la tabla de mortalidad.
@@ -34,7 +38,8 @@ class ModeloEstocastico:
         -------
         None
         """
-        self.__qx_hombres = pd.read_excel(ruta_mortalidad, sheet_name=hoja)
+        super().__init__(ruta)
+        self.__qx_hombres = pd.read_excel(self.__ruta, sheet_name=hoja)
         self.__px_hombres = 1 - self.__qx_hombres.values
     
     @property
