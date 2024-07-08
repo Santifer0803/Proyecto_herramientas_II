@@ -83,7 +83,7 @@ class GenerarDataframes():
 
     def tiempos_simples(self, tiempos):
         """
-        Genera un dataframe con los nombres de los integrantes y sus tiempos .
+        Genera un dataframe con los nombres de los integrantes y sus tiempos.
         
         Parameters
         ----------

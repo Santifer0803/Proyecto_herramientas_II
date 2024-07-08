@@ -370,57 +370,9 @@ class TrabajoDataframes(Madre):
             clear_output()
 
     
-#-------------------------------------------------------------------------------------------------------hola
+#-------------------------------------------------------------------------------------------------------
 
 #--------------------------------------Ejercicio 4------------------------------------------------------
-    
-   # @njit(parallel = True)
-   # def imputar_valores_nulos(self, data):
-        '''
-        Función que imputa valores nulos en un array de datos.
-        Esta función utiliza Numba para acelerar el proceso de imputación de valores nulos en un array,
-        reemplazando cada valor nulo por el promedio de los valores no nulos dentro de una ventana definida 
-        por el parámetro self.__banda. La imputación se realiza de manera paralela para mejorar el rendimiento.
-    
-        Parameters:
-        ----------
-        data: numpy.ndarray
-            Array de datos que contiene los valores a imputar. Puede contener valores nulos (np.nan).
-    
-        Returns:
-        -------
-        resultado: numpy.ndarray
-            Array de datos con los valores nulos imputados. Los valores nulos originales se reemplazan por el 
-            promedio de los valores no nulos dentro de la ventana definida por `banda`.
-        
-        n = len(data)
-        banda = self.__banda
-        resultado = data.copy()
-        
-        for i in prange(n):
-            
-            if np.isnan(data[i]):
-                
-                principio = max(0, i - banda)
-                
-                final = min(n, i + banda + 1)
-                
-                suma, cuenta = 0.0, 0
-                
-                for j in range(principio, final):
-                    
-                    if not np.isnan(data[j]):
-                        
-                        suma += data[j]
-                        
-                        cuenta += 1
-                        
-                if cuenta > 0:
-                    
-                    resultado[i] = suma / cuenta
-                    
-        return resultado
-        '''
    
     def imputar_por_prom_movil(self, columna):
         '''
@@ -443,7 +395,7 @@ class TrabajoDataframes(Madre):
 
         #Numba tiene limitaciones en cuanto a la compatibilidad con ciertos tipos de datos y estructuras de 
         #objetos complejas, como instancias de clases. Por lo tanto esta función tuvo que estar dentro del
-        #método y no puede ser un método por si misma.
+        #método y no puede ser un método por sí misma.
         @njit(parallel=True)
         def imputar_valores_nulos(data, banda):
             '''

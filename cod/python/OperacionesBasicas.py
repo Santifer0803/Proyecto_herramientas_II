@@ -1,8 +1,5 @@
-import numpy as np
-import numexpr as ne
-import numba as nb
-from numba import jit
 from Madre import Madre
+from numba import njit
 
 class OperacionesBasicas(Madre):
     """
@@ -101,7 +98,7 @@ class OperacionesBasicas(Madre):
         resultado = ne.evaluate('(matriz ** 100) * 10 + 5')
         return resultado
 
-    @nb.njit(parallel=True)
+    @njit(parallel=True)
     def operacion(self, matriz):
         """
         Realiza una operación en una matriz utilizando Numba.
@@ -154,7 +151,7 @@ class OperacionesBasicas(Madre):
         return np.cumprod(self.__lista)
 
     @staticmethod
-    @jit(nopython=True)
+    @njit()
     def _producto_acumulado(array):
         """
         Calcula el producto acumulado de un array utilizando Numba.

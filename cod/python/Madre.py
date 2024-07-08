@@ -127,9 +127,6 @@ class Madre:
         '''
         return f'Ruta:{self.__ruta} \nRepeticiones: {self.__repeticiones}'
     
-    
-    
-    
     def leer_txt(self):
         '''
         Esta función abre un archivo de texto en modo de lectura, 
