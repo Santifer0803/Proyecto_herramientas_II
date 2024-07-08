@@ -11,11 +11,11 @@ output: html_document
 
 Para medir los tiempos de ejecución se utilizará la librería [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/microbenchmark.pdf), la cual permite medir el tiempo de una función múltiples veces.
 
-Así, primeramente se leen varios scripts que contienen diferentes funciones que se usarán a lo largo del proyecto.
+Así, primeramente se leen varios scripts que contienen diferentes funciones y clases que se usarán a lo largo del proyecto.
 
 ```{r scripts_preparacion}
-# Scripts para la preparación
-scripts <- c(
+# Scripts de R para la preparación
+scripts_r <- c(
   "cod/r/librerias.R",
   "cod/r/fun_calcular_tiempos.R",
   "cod/r/fun_df_tiempos_simples.R",
@@ -38,10 +38,25 @@ scripts <- c(
 )
 
 # Se leen los scripts
-invisible(lapply(scripts, source))
+invisible(lapply(scripts_r, source))
+
+# Scripts de Python para la preparación
+scripts_python <- c(
+  "cod/python/librerias.py",
+  "cod/python/clases.py"
+)
+
+# Se leen los scripts
+invisible(lapply(scripts_python, source_python))
 ```
 
 ## Operaciones simples
+
+Primeramente, se crea un objeto de la clase OperacionesBasicas que se usará a lo largo de esta sección.
+
+```{python objeto_operaciones_basicas}
+# Crear el objeto de OperacionesBasicas
+```
 
 ### Operaciones matriciales
 
@@ -69,22 +84,36 @@ invisible(lapply(scripts, source))
 
 Se calculan los tiempos de ejecución del ejercicio.
 
-```{r tiempos_operacion_matricial}
+```{r tiempos_operacion_matricial_r}
 calcular.tiempos(function()
   operacion.matricial(matriz))
 ```
 
 Se guardan los tiempos promedio por integrante de realizar la operación matricial.
 
-```{r tiempos_matrices}
+```{r tiempos_matrices_r}
 # Se guarda este tiempo por integrante en un dataframe
 tiempos.matrices <- df.tiempos.simples(c(4.246259, 5.99183, 7.257987, 7.87946))
 ```
 
 Se grafica lo anterior.
 
-```{r graf_tiempos_matrices}
+```{r graf_tiempos_matrices_r}
 graficos.simples(tiempos.matrices, "coral3", "Tiempos del ejercicio de matrices")
+```
+
+Se procede a hacer lo mismo en Python.
+
+```{python tiempos_operacion_matricial_py}
+# Simular que se calculan los tiempos promedio de ejecución
+```
+
+```{python tiempos_matrices_py}
+# Guardar esos tiempos en un Dataframe
+```
+
+```{python graf_tiempos_matrices_py}
+# Graficar los tiempos
 ```
 
 ### Producto acumulado
