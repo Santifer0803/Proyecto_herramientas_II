@@ -555,21 +555,12 @@ scripts <- c(
   "cod/r/setup_modelo_estoc.R",
   "cod/r/fun_primer_falso.R",
   "cod/r/primera_iteracion_modelo_estoc.R",
-  "cod/r/fun_iteraciones_estoc.R"
+  "cod/r/fun_iteraciones_estoc.R",
+  "cod/r/tiempo_modelo_estocastico.R"
 )
 
 # Se leen los scripts
 invisible(lapply(scripts, source))
-```
-
-Probamos el modelo para los hombres, el otro caso es análogo.
-
-```{r tiempo_modelo_estocastico}
-ini <- Sys.time()
-primas.estocasticash <-
-  modelo.estocastico(matriz.probh, 0, lista.primash)
-fin <- Sys.time()
-print(((fin - ini) * 60) / length(primas.estocasticash))
 ```
 
 Se crea un DataFrame con los tiempos del modelo.
