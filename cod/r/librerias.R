@@ -1,0 +1,15 @@
+pacman::p_load(
+  microbenchmark,
+  ggplot2,
+  dplyr,
+  readxl,
+  utils,
+  tidyr,
+  data.table,
+  furrr,
+  future,
+  readr,
+  stringi,
+  plotly,
+  reticulate
+)
