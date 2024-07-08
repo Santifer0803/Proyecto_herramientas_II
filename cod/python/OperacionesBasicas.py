@@ -1,5 +1,8 @@
-from Madre import Madre
+import numpy as np
+import numexpr as ne
+import numba as nb
 from numba import njit
+from Madre import Madre
 
 class OperacionesBasicas(Madre):
     """

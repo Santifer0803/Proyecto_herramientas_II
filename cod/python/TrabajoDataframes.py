@@ -1,3 +1,10 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from joblib import Parallel, delayed
+from numba import prange, njit
+import seaborn as sns
+from IPython.display import clear_output
 from Madre import Madre
 
 class TrabajoDataframes(Madre):

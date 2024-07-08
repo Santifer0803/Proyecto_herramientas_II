@@ -1,3 +1,5 @@
+import pandas as pd
+
 class GenerarDataframes():
     """
     Clase para generar dataframes a partir de listas de tiempos y nombres de integrantes.

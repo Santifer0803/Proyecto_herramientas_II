@@ -1,3 +1,6 @@
+import pandas as pd
+import timeit
+
 class Madre:
     """
     Clase para heredar atributos y métodos a clases futuras

@@ -1,4 +1,8 @@
-import Madre from Madre
+import pandas as pd
+import numpy as np
+from scipy.stats import norm
+import time
+from Madre import Madre
 
 class ModeloEstocastico(Madre):
     """
