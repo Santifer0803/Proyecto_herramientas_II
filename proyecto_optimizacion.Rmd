@@ -52,10 +52,14 @@ invisible(lapply(scripts_python, source_python))
 
 ## Operaciones simples
 
-Primeramente, se crea un objeto de la clase OperacionesBasicas que se usará a lo largo de esta sección.
+Primeramente, se crea un objeto de la clase OperacionesBasicas y de GenerarDataframes que se usará a lo largo de esta sección.
 
 ```{python objeto_operaciones_basicas}
-# Crear el objeto de OperacionesBasicas
+obj_operaciones_basicas = OperacionesBasicas('data/El_principito.txt', np.random.uniform(0, 2, 100_000).tolist(),'data/El_principito.txt' )
+```
+
+```{python obj_generar_df}
+obj_generadordf = GenerarDataframes(['Alejandro', 'Eyeri', 'Santiago', 'Paula'])
 ```
 
 ### Operaciones matriciales
@@ -117,7 +121,7 @@ df_operacion_matriz_py = obj_generadordf.tiempos_dobles('Tiempos numexpr', [2.38
 ```
 
 ```{python graf_tiempos_matrices_py}
-GenerarGraficos(df_operacion_matriz_py).barras_agrupadas('integrante', 'Tiempos numexpr', 'Tiempos numba', ['Metodo', 'Numexpr', 'Numba'], 'Operacion Matricial Python')
+GenerarGraficos(df_operacion_matriz_py).barras_agrupadas('integrante', 'Tiempos numexpr', 'Tiempos numba', ['Condición', 'Numexpr', 'Numba'], 'Tiempos del ejercicio de matricesl')
 ```
 
 ### Producto acumulado
