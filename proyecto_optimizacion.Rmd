@@ -689,7 +689,7 @@ df_regresion_logistica_py = obj_generadordf.tiempos_simples([0.1062, 0.0067, 0.0
 ```
 
 ```{python graf_regresionlogistica_py}
-GenerarGraficos(df_regresion_logistica_py).barras('integrante', 'Tiempo', 'Tiempos Regresion Lineal')
+GenerarGraficos(df_regresion_logistica_py).barras('integrante', 'Tiempo', 'Tiempos Regresion Logistica')
 ```
 ### Modelo estocástico
 
