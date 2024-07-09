@@ -292,6 +292,7 @@ obj_Muertes.medir_tiempo("limpiar_datos()")
 ```
 
 Se crea un objeto de la clase GenerarDataframes el cual se utilizara para los proximos ejercicios
+
 ```{python objeto GenerarDataframes}
 obj_generadordf = GenerarDataframes(['Alejandro', 'Eyeri', 'Santiago', 'Paula'])
 ```
@@ -421,8 +422,8 @@ graficos.simples(tiempos.mediam,
                  "Tiempos de imputación por media móvil")
 ```
 
-Se crea un objeto de la clase TrabajoDataframes con la ruta de Base salarios
-el cual se utilizara para proximos ejercicios
+Se crea un objeto de la clase TrabajoDataframes con la ruta de Base salarios el cual se utilizara para proximos ejercicios
+
 ```{python objeto TrabajoDataframes Base Salarios}
 obj_Base_salarios = TrabajoDataframes('data/Base_salarios.xlsx')
 ```
