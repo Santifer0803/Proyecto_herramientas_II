@@ -105,15 +105,19 @@ graficos.simples(tiempos.matrices, "coral3", "Tiempos del ejercicio de matrices"
 Se procede a hacer lo mismo en Python.
 
 ```{python tiempos_operacion_matricial_py}
-# Simular que se calculan los tiempos promedio de ejecución
+obj_operaciones_basicas.medir_tiempo("operacion_matricial()")
+```
+
+```{python tiempos_matriz_numba}
+obj_operaciones_basicas.medir_tiempo("operacion_matricial_numba()")
 ```
 
 ```{python tiempos_matrices_py}
-# Guardar esos tiempos en un Dataframe
+df_operacion_matriz_py = obj_generadordf.tiempos_dobles('Tiempos numexpr', [2.38700, 0.61500, 0.34238, 2.34700 ], 'Tiempos numba', [0.73300, 0.22180, 0.24621, 0.46500 ])
 ```
 
 ```{python graf_tiempos_matrices_py}
-# Graficar los tiempos
+GenerarGraficos(df_operacion_matriz_py).barras_agrupadas('integrante', 'Tiempos numexpr', 'Tiempos numba', ['Metodo', 'Numexpr', 'Numba'], 'Operacion Matricial Python')
 ```
 
 ### Producto acumulado
