@@ -43,7 +43,7 @@ class ModeloEstocastico(Madre):
         None
         """
         super().__init__(ruta)
-        self.__qx_hombres = pd.read_excel(self.__ruta, sheet_name=hoja)
+        self.__qx_hombres = pd.read_excel(self.ruta, sheet_name=hoja)
         self.__px_hombres = 1 - self.__qx_hombres.values
     
     @property
