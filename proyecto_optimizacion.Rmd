@@ -380,7 +380,7 @@ obj_Muertes.medir_tiempo("generar_graficos()")
 ```
 
 ```{python tiempos_graficos_paralelo}
-df_limpieza = ob_gen_limpieza.tiempos_simples([9.71, 8.28, 8.36, 17.07])
+df_limpieza = obj_generadordf.tiempos_simples([9.71, 8.28, 8.36, 17.07])
 ```
 
 ```{python grafico_graficos_paralelo}
