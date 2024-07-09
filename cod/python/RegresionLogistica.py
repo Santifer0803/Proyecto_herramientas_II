@@ -8,7 +8,7 @@ class RegresionLogistica(Madre):
         super().__init__(ruta)
         self.__num_iterations = num_iterations
         self.__learning_rate = learning_rate
-        self.__datos = self.leer_txt(self.ruta)
+        self.__datos = self.leer_csv(self.ruta)
         X =  self.__datos.iloc[:, :-1].values
         y = self.__datos.iloc[:, -1].values
         X = (X - np.min(X)) / (np.max(X) - np.min(X))

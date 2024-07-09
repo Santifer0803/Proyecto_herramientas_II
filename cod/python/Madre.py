@@ -164,6 +164,23 @@ class Madre:
         '''
         contenido = pd.read_excel(self.__ruta, engine = 'openpyxl')
         return contenido
+    
+    def leer_csv(self): 
+        '''
+        Esta función utiliza pandas para abrir un archivo tipo csv en modo de lectura, 
+        y carga su contenido en un DataFrame.
+        
+        Parameters
+        ---------
+        None
+        
+        Returns:
+        -------
+        contenido: pandas.DataFrame
+           DataFrame que contiene los datos del archivo csv leído
+        '''
+        contenido = pd.read_csv(self.__ruta)
+        return contenido
         
     def medir_tiempo(self, metodo_str):
         '''
