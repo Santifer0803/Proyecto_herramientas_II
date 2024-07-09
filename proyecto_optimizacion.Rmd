@@ -50,16 +50,18 @@ scripts_python <- c(
 invisible(lapply(scripts_python, source_python))
 ```
 
-## Operaciones simples
-
-Primeramente, se crea un objeto de la clase OperacionesBasicas y de GenerarDataframes que se usará a lo largo de esta sección.
-
-```{python objeto_operaciones_basicas}
-obj_operaciones_basicas = OperacionesBasicas('data/El_principito.txt', np.random.uniform(0, 2, 100_000).tolist(),'data/El_principito.txt' )
-```
+Antes de iniciar con los ejercicios, se crea un objeto de la clase GenerarDataframes, el cual se usará a lo largo de todo el proyecto.
 
 ```{python obj_generar_df}
 obj_generadordf = GenerarDataframes(['Alejandro', 'Eyeri', 'Santiago', 'Paula'])
+```
+
+## Operaciones simples
+
+Primeramente, se crea un objeto de la clase OperacionesBasicas que se usará a lo largo de esta sección.
+
+```{python objeto_operaciones_basicas}
+obj_operaciones_basicas = OperacionesBasicas('data/El_principito.txt', np.random.uniform(0, 2, 100_000).tolist(),'data/El_principito.txt' )
 ```
 
 ### Operaciones matriciales
@@ -117,11 +119,11 @@ obj_operaciones_basicas.medir_tiempo("operacion_matricial_numba()")
 ```
 
 ```{python tiempos_matrices_py}
-df_operacion_matriz_py = obj_generadordf.tiempos_dobles('Tiempos numexpr', [2.38700, 0.61500, 0.34238, 2.34700 ], 'Tiempos numba', [0.73300, 0.22180, 0.24621, 0.46500 ])
+df_operacion_matriz_py = obj_generadordf.tiempos_dobles('Tiempos Numexpr', [2.38700, 0.61500, 0.34238, 2.34700 ], 'Tiempos Numba', [0.73300, 0.22180, 0.24621, 0.46500 ])
 ```
 
 ```{python graf_tiempos_matrices_py}
-GenerarGraficos(df_operacion_matriz_py).barras_agrupadas('integrante', 'Tiempos numexpr', 'Tiempos numba', ['Condición', 'Numexpr', 'Numba'], 'Tiempos del ejercicio de matricesl')
+GenerarGraficos(df_operacion_matriz_py).barras_agrupadas('integrante', 'Tiempos Numexpr', 'Tiempos Numba', ['Condición', 'Numexpr', 'Numba'], 'Tiempos del ejercicio de matrices')
 ```
 
 ### Producto acumulado
@@ -158,18 +160,20 @@ calcular.tiempos(function()
 Se guardan los tiempos promedio por integrante de realizar el producto acumulado tanto con cumprod como con sapply.
 
 ```{r tiempos_producto_acumulado}
-tiempos.prod.acum.acumprod <- df.tiempos.simples(c(0.001, 0.01, 0.006, 0.02))
+tiempos.prod.acum.cumprod <- df.tiempos.simples(c(0.02, 0.006, 0.001, 0.010),
+                                                 c("Alejandro", "Eyeri", "Santiago", "Paula"))
 
-tiempos.prod.acum.sapply <- df.tiempos.simples(c(27.93, 44.54, 27.82, 115.22))
+tiempos.prod.acum.sapply <- df.tiempos.simples(c(115.22, 27.82, 27.93, 44.54),
+                                               c("Alejandro", "Eyeri", "Santiago", "Paula"))
 ```
 
 Se grafica lo anterior en 2 gráficos por separado, ya que en un solo gráfico no se podría apreciar el tiempo promedio de ejecución usando cumprod, pues este es muy bajo en comparación con el tiempo promedio usando sapply.
 
 ```{r grafico_producto_acumulado}
 graficos.simples(
-  tiempos.prod.acum.acumprod,
+  tiempos.prod.acum.cumprod,
   "darkmagenta",
-  "Tiempos del producto acumulado con acumprod"
+  "Tiempos del producto acumulado con cumprod"
 )
 
 graficos.simples(tiempos.prod.acum.sapply,
@@ -177,8 +181,7 @@ graficos.simples(tiempos.prod.acum.sapply,
                  "Tiempos del producto acumulado con sapply")
 ```
 
-Ahora en Python
-
+Ahora en Python.
 
 ```{python tiempos_prod_acumulado_py}
 obj_operaciones_basicas.medir_tiempo("producto_acumulado()")
@@ -189,12 +192,13 @@ obj_operaciones_basicas.medir_tiempo("producto_acumulado_numba()")
 ```
 
 ```{python tiempos_prod_acumulado_py}
-df_prod_acumulado_py = obj_generadordf.tiempos_dobles('Tiempos Cumprod', [0.018, 0.008, 0.007, 0.015 ], 'Tiempos numba', [0.366, 0.029, 0.06, 0.124 ])
+df_prod_acumulado_py = obj_generadordf.tiempos_dobles('Tiempos Cumprod', [0.018, 0.008, 0.007, 0.015], 'Tiempos Numba', [0.366, 0.029, 0.06, 0.124 ])
 ```
 
 ```{python graf_tiempos_matrices_py}
-GenerarGraficos(df_prod_acumulado_py).barras_agrupadas('integrante', 'Tiempos cumprod', 'Tiempos numba', ['Condición', 'cumprod', 'Numba'], 'Tiempos del producto acumulado')
+GenerarGraficos(df_prod_acumulado_py).barras_agrupadas('integrante', 'Tiempos Cumprod', 'Tiempos Numba', ['Condición', 'Cumprod', 'Numba'], 'Tiempos del producto acumulado')
 ```
+
 ### Cifrado César
 
 Scripts necesarios para el ejercicio.
@@ -246,7 +250,7 @@ graficos.dobles.texto(
 )
 ```
 
-Ahora la version de Python
+Ahora la versión de Python.
 
 ```{python tiempos_cifrado_cesar_py}
 obj_operaciones_basicas.medir_tiempo("cifrado_cesar(5)")
@@ -257,11 +261,20 @@ df_cifrado_cesar_py = obj_generadordf.tiempos_simples([0.035, 0.013, 0.014, 0.03
 ```
 
 ```{python graf_tiempos_matrices_py}
-GenerarGraficos(df_cifrado_cesar_py).barras('integrante', 'Tiempo', 'Tiempos Cifrado Cesar')
+GenerarGraficos(df_cifrado_cesar_py).barras('integrante', 'tiempo', 'Tiempos del cifrado César')
 ```
+
 ## Trabajo con bases de datos
 
 Para esta sección, es importante mencionar que en varios ejercicios se modifica la base de datos en cuestión a un objeto de tipo [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto. Además, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
+
+De esta manera, se proceden a crear los objetos necesarios para este bloque de ejercicios.
+
+```{python objetos_trabajo_bases_datos}
+obj_Muertes = TrabajoDataframes('data/Muertes_costa_rica.xlsx')
+
+obj_Base_salarios = TrabajoDataframes('data/Base_salarios.xlsx')
+```
 
 ### Limpieza eficiente
 
@@ -323,18 +336,8 @@ graficos.dobles.limpieza(
 
 Se hace lo mismo en Python.
 
-```{python objeto_TrabajoDataframes_Muertes}
-obj_Muertes = TrabajoDataframes('data/Muertes_costa_rica.xlsx')
-```
-
 ```{python medir_limpieza}
 obj_Muertes.medir_tiempo("limpiar_datos()")
-```
-
-Se crea un objeto de la clase GenerarDataframes el cual se utilizará para los proximos ejercicios
-
-```{python objeto_GenerarDataframes}
-obj_generadordf = GenerarDataframes(['Alejandro', 'Eyeri', 'Santiago', 'Paula'])
 ```
 
 ```{python limpieza _tiempos}
@@ -342,7 +345,7 @@ df_limpieza = obj_generadordf.tiempos_simples([2.288, 0.828, 0.798, 1.972])
 ```
 
 ```{python grafico limpieza}
-GenerarGraficos(df_limpieza).barras('integrante', 'tiempo','Tiempos Limpieza de Datos')
+GenerarGraficos(df_limpieza).barras('integrante', 'tiempo','Tiempos de limpieza de una base')
 ```
 
 ### Gráficos en paralelo
@@ -390,7 +393,7 @@ Se grafica lo anterior.
 ```{r grafico_tiempos_graficar}
 graficos.dobles.graf(
   tiempos.graficos,
-  "Tiempos de gráficos",
+  "Tiempos de gráficos en paralelo",
   c(
     "Histogramas" = "khaki3",
     "Gráficos de barras" = "green3"
@@ -401,13 +404,13 @@ graficos.dobles.graf(
 Ahora se realiza el ejercicio en Python.
 
 ```{python objeto_TrabajoDataframes_Muertes_limpias}
-muertes_limpias = TrabajoDataframes('data/Muertes_costa_rica.xlsx').limpiar_datos()
+muertes_limpias = obj_Muertes.limpiar_datos()
 obj_Muertes_limpias = TrabajoDataframes(0)
 obj_Muertes_limpias.dataframe = muertes_limpias
 ```
 
 ```{python medir_tiempo_graficos_paralelo}
-obj_Muertes.medir_tiempo("generar_graficos()")
+obj_Muertes_limpias.medir_tiempo("generar_graficos()")
 ```
 
 ```{python tiempos_graficos_paralelo}
@@ -415,7 +418,7 @@ df_limpieza = ob_gen_limpieza.tiempos_simples([9.71, 8.28, 8.36, 17.07])
 ```
 
 ```{python grafico_graficos_paralelo}
-GenerarGraficos(df_limpieza).barras('integrante', 'tiempo','Graficos en paralelo')
+GenerarGraficos(df_limpieza).barras('integrante', 'tiempo','Tiempos de gráficos en paralelo')
 ```
 
 ### Media móvil
@@ -461,12 +464,7 @@ graficos.simples(tiempos.mediam,
                  "Tiempos de imputación por media móvil")
 ```
 
-
-Ahora en Python. Se crea un objeto de la clase TrabajoDataframes con la ruta de Base salarios el cual se utilizará para próximos ejercicios.
-
-```{python objeto TrabajoDataframes Base Salarios}
-obj_Base_salarios = TrabajoDataframes('data/Base_salarios.xlsx')
-```
+Ahora en Python.
 
 ```{python medir prom movil}
 obj_Base_salarios.medir_tiempo("imputar_por_prom_movil('Salario base')")
@@ -477,7 +475,7 @@ df_movil = obj_generadordf.tiempos_simples([0.053, 0.034, 0.055, 0.198])
 ```
 
 ```{python grafico prom movil}
-GenerarGraficos(df_movil).barras('integrante', 'tiempo', 'Tiempos Imputacion por Media Movil')
+GenerarGraficos(df_movil).barras('integrante', 'tiempo', 'Tiempos de imputacion por media móvil')
 ```
 
 ### Eliminación de columnas por porcentaje de valores nulos
@@ -524,7 +522,7 @@ En gráfico.
 ```{r grafico_elimcol}
 graficos.dobles.elimcols(
   tiempos.eliminar.columnas,
-  "Tiempo de eliminación de columnas",
+  "Tiempos de eliminación de columnas",
   c(
     "Con datatable" = "indianred3",
     "Sin datatable" = "hotpink2"
@@ -543,7 +541,7 @@ df_elimi_col = obj_generadordf.tiempos_simples([0.0071, 0.0019, 0.0035, 0.0075])
 ```
 
 ```{python grafico eliminar cols}
-GenerarGraficos(df_elimi_col).barras('integrante', 'tiempo', 'Tiempos Eliminacion de columnas por valores nulos')
+GenerarGraficos(df_elimi_col).barras('integrante', 'tiempo', 'Tiempos de eliminacion de columnas')
 ```
 
 ### Imputación por agrupación
@@ -599,7 +597,7 @@ Con un gráfico.
 ```{r grafico_imputacion}
 graficos.dobles.imputacion(
   tiempos.agrupacion,
-  "Tiempos de gráficos",
+  "Tiempos de imputación por agrupación",
   c(
     "Datatable" = "darkslategray3",
     "Dplyr" = "firebrick3"
@@ -618,10 +616,18 @@ df_agrupacion = obj_generadordf.tiempos_simples([0.067, 0.022, 0.021, 0,052])
 ```
 
 ```{python grafico impu agrupacion}
-GenerarGraficos(df_agrupacion).barras('integrante', 'tiempo', 'Imputacion por agrupacion')
+GenerarGraficos(df_agrupacion).barras('integrante', 'tiempo', 'Tiempos de imputación por agrupación')
 ```
 
 ## Aplicaciones prácticas
+
+Se crean los objetos para esta sección.
+
+```{python objetos_aplicaciones_practicas}
+obj_regresion_logistica = RegresionLogistica('data/Diabetes.txt')
+
+obj_modelo = ModeloEstocastico('data/Mortalidad_supen.xlsx', 'Sexo_1_limpio')
+```
 
 ### Regresión logística
 
@@ -674,11 +680,7 @@ graficos.simples(tiempos.regresion.log,
                  "Tiempos de la regresión logística")
 ```
 
-Ahora, en Python 
-
-```{python obj_regresion_logsitica_py}
-obj_regresion_logistica = RegresionLogistica('data/Diabetes.txt')
-```
+Se realiza la regresión logística en Python.
 
 ```{python tiempos_regresionlogistica_py}
 obj_regresion_logistica.medir_tiempo("entrenar()")
@@ -689,8 +691,9 @@ df_regresion_logistica_py = obj_generadordf.tiempos_simples([0.1062, 0.0067, 0.0
 ```
 
 ```{python graf_regresionlogistica_py}
-GenerarGraficos(df_regresion_logistica_py).barras('integrante', 'Tiempo', 'Tiempos Regresion Logistica')
+GenerarGraficos(df_regresion_logistica_py).barras('integrante', 'tiempo', 'Tiempos de la regresion logística')
 ```
+
 ### Modelo estocástico
 
 Se empieza leyendo los scripts para el ejercicio.
@@ -711,33 +714,28 @@ invisible(lapply(scripts, source))
 
 Se crea un DataFrame con los tiempos del modelo.
 
-```{r tiempos_modelo_estocastico}
+```{r tiempos_modelo_estocastico_r}
 tiempos.estocast <- df.tiempos.simples(c(0.032, 0.046, 0, 0.124),
                                        c("Eyeri", "Santiago", "Paula", "Alejandro"))
 ```
 
 Gráfico del modelo estocástico.
 
-```{r grafico_modelo_estocástico}
+```{r grafico_modelo_estocástico_r}
 graficos.simples(tiempos.estocast, "pink2", "Tiempos del modelo estocástico")
 ```
 
 Ahora se hace el ejercicio en Python.
 
-```{python objeto modelo estocastico}
-obj_modelo = ModeloEstocastico('data/Mortalidad_supen.xlsx', 'Sexo_1_limpio')
-```
-
-```{python medir modelo estocastico}
+```{python medir_tiempo_modelo estocastico}
 obj_modelo.calcular_tiempo_promedio()
 ```
 
-```{python tiempos modelo estocastico}
+```{python tiempos_modelo_estocastico_py}
 df_modelo = obj_generadordf.tiempos_simples([0.05, 0.02, 0.02, 0,03])
 ```
 
-```{python grafico modelo estocastico}
-GenerarGraficos(df_modelo).barras('integrante', 'tiempo','Modelo estocastico')
+```{python grafico_modelo_estocastico_py}
+GenerarGraficos(df_modelo).barras('integrante', 'tiempo','Tiempos del modelo estocástico')
 ```
-
 
