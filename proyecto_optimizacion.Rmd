@@ -291,6 +291,7 @@ obj_Muertes = TrabajoDataframes('data/Muertes_costa_rica.xlsx')
 obj_Muertes.medir_tiempo("limpiar_datos()")
 ```
 
+Se crea un objeto de la clase GenerarDataframes el cual se utilizara para los proximos ejercicios
 ```{python objeto GenerarDataframes}
 obj_generadordf = GenerarDataframes(['Alejandro', 'Eyeri', 'Santiago', 'Paula'])
 ```
@@ -359,7 +360,7 @@ graficos.dobles.graf(
 ```
 
 ```{python objeto TrabajoDataframes Muertes limpias}
-muertes_limpias = TrabajoDataframes('Muertes_costa_rica.xlsx').limpiar_datos()
+muertes_limpias = TrabajoDataframes('data/Muertes_costa_rica.xlsx').limpiar_datos()
 obj_Muertes_limpias = TrabajoDataframes(0)
 obj_Muertes_limpias.dataframe = muertes_limpias
 ```
@@ -420,8 +421,10 @@ graficos.simples(tiempos.mediam,
                  "Tiempos de imputación por media móvil")
 ```
 
+Se crea un objeto de la clase TrabajoDataframes con la ruta de Base salarios
+el cual se utilizara para proximos ejercicios
 ```{python objeto TrabajoDataframes Base Salarios}
-obj_Base_salarios = TrabajoDataframes('Base_salarios.xlsx')
+obj_Base_salarios = TrabajoDataframes('data/Base_salarios.xlsx')
 ```
 
 ```{python medir prom movil}
@@ -659,3 +662,19 @@ graficos.simples(tiempos.estocast, "pink2", "Tiempos del modelo estocástico")
 ```
 
 
+
+```{python objeto modelo estocastico}
+obj_modelo = ModeloEstocastico('data/Mortalidad_supen.xlsx', 'Sexo_1_limpio')
+```
+
+```{python medir modelo estocastico}
+obj_modelo.calcular_tiempo_promedio()
+```
+
+```{python tiempos modelo estocastico}
+df_modelo = obj_generadordf.tiempos_simples([0.05, 0.02, 0.02, 0,03])
+```
+
+```{python grafico modelo estocastico}
+GenerarGraficos(df_modelo).barras('integrante', 'tiempo','Modelo estocastico')
+```
