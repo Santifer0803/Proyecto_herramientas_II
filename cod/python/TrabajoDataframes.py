@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 from numba import prange, njit
 import seaborn as sns
-from IPython.display import clear_output
 from Madre import Madre
 
 class TrabajoDataframes(Madre):
@@ -252,7 +251,7 @@ class TrabajoDataframes(Madre):
 #--------------------------------------Ejercicio 3------------------------------------------------------
     # Se define una función que realice los histogramas para las variables numéricas
     @staticmethod
-    def histograma(df, columna):
+    def histograma(df, columna, mostrar = False):
         '''
         Función que crea un histograma para una columna numérica específica de un DataFrame.
 
@@ -263,25 +262,36 @@ class TrabajoDataframes(Madre):
 
         columna: str
            Nombre de la columna numérica para la cual se desea crear el histograma
+           
+        mostrar: bool
+                 booleano que indica si se desea mostrar el gráfico. Por defecto es False
 
         Returns:
         -------
-        fig: matplotlib.figure.Figure
-           Figura del histograma generado
+        None
         '''
-        plt.figure()
         
-        sns.histplot(df[columna], bins = 'auto', color = 'blue', edgecolor = 'black')
+        fig, ax = plt.subplots()
         
-        plt.xlabel('Valor')
+        ax.hist(df[columna], bins = 'auto', color = 'blue', edgecolor = 'black')
         
-        plt.ylabel('Frecuencia')
+        ax.set_xlabel('Valor')
         
-        return plt.gcf()
+        ax.set_ylabel('Frecuencia')
+        
+        if mostrar:
+          
+          plt.figure(fig.number)
+
+          plt.show()
+          
+        else:
+          
+          plt.close() 
 
     # Se define otra función que haga los gráficos de barras para las variables categóricas
     @staticmethod
-    def barras(df, columna):
+    def barras(df, columna, mostrar = False):
         '''
         Función que crea un gráfico de barras para una columna categórica específica de un DataFrame.
 
@@ -292,24 +302,36 @@ class TrabajoDataframes(Madre):
 
         columna: str
            Nombre de la columna categórica para la cual se desea crear el gráfico de barras
+           
+        mostrar: bool
+                 booleano que indica si se desea mostrar el gráfico. Por defecto es False
 
         Returns:
         -------
-        fig: matplotlib.figure.Figure
-           Figura del gráfico de barras generado
+        None
         '''
         
-        plt.figure()
+        categorias, frecuencias = np.unique(df[columna], return_counts = True)
         
-        sns.countplot(x = columna, data = df, color = 'red')
+        fig, ax = plt.subplots()
+        
+        ax.bar(categorias, frecuencias, color = 'red')
+        
+        ax.set_xlabel('Categorías')
+        
+        ax.set_ylabel('Frecuencia')
     
-        plt.xticks(rotation = 45)
+        ax.tick_params(axis = 'x', rotation = 45)
         
-        plt.xlabel('Categorías')
-        
-        plt.ylabel('Cantidad')
-        
-        return plt.gcf()
+        if mostrar:
+          
+          plt.figure(fig.number)
+
+          plt.show()
+          
+        else:
+          
+          plt.close()
 
     # Definimos una función que devuelve las columnas numéricas y categóricas en listas por aparte
     @staticmethod
@@ -339,43 +361,35 @@ class TrabajoDataframes(Madre):
 
     
     # Definimos una función que genere los gráficos deseados
-    def generar_graficos(self, limpiar = True):
+    def generar_graficos(self):
         '''
         Función que genera gráficos de histogramas para variables numéricas y gráficos de barras para variables categóricas.
 
         Parameters:
         ----------
-        limpiar: bool
-           Si es True, se limpiará la salida después de mostrar los gráficos (por defecto True)
+        None
+        
+        Returns:
+        --------
+        None
         '''
         
         muertes_cr = self.__dataframe
         # Obtenemos las variables numericas y categóricas
         numericas, categoricas = self.tipos_columnas(muertes_cr)
         
-        # Generamos y guardamos los gráficos tanto de histogramas como de barras usando la paralelización de joblib
-        histogramas = Parallel(n_jobs = -1)(
+        # Generamos los gráficos tanto de histogramas como de barras usando la paralelización de joblib
+        histogramas = Parallel(n_jobs = 1)(
         
-            delayed(self.histograma)(muertes_cr, col) for col in numericas
-        
+          delayed(self.histograma)(muertes_cr, col) for col in numericas
+          
         )
-    
-        graficos_barras = Parallel(n_jobs = -1)(
-        
-            delayed(self.barras)(muertes_cr, col) for col in categoricas
-        
-        )
-    
-        # Mostramos los gráficos
-        for grafico in histogramas + graficos_barras:
-    
-            plt.show()
-    
-        # Si el parámetro limpiar es True, no se mostrarán los gráficos
-        if limpiar:
-    
-            clear_output()
 
+        graficos_barras = Parallel(n_jobs = 1)(
+          
+          delayed(self.barras)(muertes_cr, col) for col in categoricas
+          
+        )
     
 #-------------------------------------------------------------------------------------------------------
 

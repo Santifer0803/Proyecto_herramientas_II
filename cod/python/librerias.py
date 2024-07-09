@@ -12,7 +12,6 @@ import numexpr as ne
 import numba as nb
 from numba import jit, njit, prange
 from joblib import Parallel, delayed
-from IPython.display import clear_output
 from sklearn.model_selection import train_test_split
 from scipy.stats import norm
 
