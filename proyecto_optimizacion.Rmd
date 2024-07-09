@@ -177,6 +177,24 @@ graficos.simples(tiempos.prod.acum.sapply,
                  "Tiempos del producto acumulado con sapply")
 ```
 
+Ahora en Python
+
+
+```{python tiempos_prod_acumulado_py}
+obj_operaciones_basicas.medir_tiempo("producto_acumulado()")
+```
+
+```{python tiempos_prod_acumulado_numba}
+obj_operaciones_basicas.medir_tiempo("producto_acumulado_numba()")
+```
+
+```{python tiempos_prod_acumulado_py}
+df_prod_acumulado_py = obj_generadordf.tiempos_dobles('Tiempos Cumprod', [0.018, 0.008, 0.007, 0.015 ], 'Tiempos numba', [0.366, 0.029, 0.06, 0.124 ])
+```
+
+```{python graf_tiempos_matrices_py}
+GenerarGraficos(df_prod_acumulado_py).barras_agrupadas('integrante', 'Tiempos cumprod', 'Tiempos numba', ['Condición', 'cumprod', 'Numba'], 'Tiempos del producto acumulado')
+```
 ### Cifrado César
 
 Scripts necesarios para el ejercicio.
@@ -228,6 +246,19 @@ graficos.dobles.texto(
 )
 ```
 
+Ahora la version de Python
+
+```{python tiempos_cifrado_cesar_py}
+obj_operaciones_basicas.medir_tiempo("cifrado_cesar(5)")
+```
+
+```{python df_cifrado_cesar_py}
+df_cifrado_cesar_py = obj_generadordf.tiempos_simples([0.035, 0.013, 0.014, 0.037 ] )
+```
+
+```{python graf_tiempos_matrices_py}
+GenerarGraficos(df_cifrado_cesar_py).barras('integrante', 'Tiempo', 'Tiempos Cifrado Cesar')
+```
 ## Trabajo con bases de datos
 
 Para esta sección, es importante mencionar que en varios ejercicios se modifica la base de datos en cuestión a un objeto de tipo [data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html), este se trata de una versión más eficiente de los data.frames que R trae por defecto. Además, es necesario mencionar que los data.table tienen una sintaxis similar a SQL.
@@ -380,7 +411,7 @@ obj_Muertes.medir_tiempo("generar_graficos()")
 ```
 
 ```{python tiempos_graficos_paralelo}
-df_limpieza = obj_generadordf.tiempos_simples([9.71, 8.28, 8.36, 17.07])
+df_limpieza = ob_gen_limpieza.tiempos_simples([9.71, 8.28, 8.36, 17.07])
 ```
 
 ```{python grafico_graficos_paralelo}
@@ -430,7 +461,8 @@ graficos.simples(tiempos.mediam,
                  "Tiempos de imputación por media móvil")
 ```
 
-Se crea un objeto de la clase TrabajoDataframes con la ruta de Base salarios el cual se utilizará para próximos ejercicios.
+
+Ahora en Python. Se crea un objeto de la clase TrabajoDataframes con la ruta de Base salarios el cual se utilizará para próximos ejercicios.
 
 ```{python objeto TrabajoDataframes Base Salarios}
 obj_Base_salarios = TrabajoDataframes('data/Base_salarios.xlsx')
@@ -642,6 +674,23 @@ graficos.simples(tiempos.regresion.log,
                  "Tiempos de la regresión logística")
 ```
 
+Ahora, en Python 
+
+```{python obj_regresion_logsitica_py}
+obj_regresion_logistica = RegresionLogistica('data/Diabetes.txt')
+```
+
+```{python tiempos_regresionlogistica_py}
+obj_regresion_logistica.medir_tiempo("entrenar()")
+```
+
+```{python df_regresion_logistica_py}
+df_regresion_logistica_py = obj_generadordf.tiempos_simples([0.1062, 0.0067, 0.0045, 0.0398 ] )
+```
+
+```{python graf_regresionlogistica_py}
+GenerarGraficos(df_regresion_logistica_py).barras('integrante', 'Tiempo', 'Tiempos Regresion Lineal')
+```
 ### Modelo estocástico
 
 Se empieza leyendo los scripts para el ejercicio.
