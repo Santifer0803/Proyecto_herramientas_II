@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.express as px
+import random
 
 class GenerarGraficos:
   
@@ -116,8 +117,12 @@ class GenerarGraficos:
     None
     """
     
+    def random_color():
+    
+      return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+    
     fig = px.bar(self.__df, x = variable_x, y = variable_y, 
-                 color_discrete_sequence = ["#1f77b4"], title = titulo)
+                 color_discrete_sequence = [random_color()], title = titulo)
     
     fig.update_layout(
       
@@ -166,13 +171,17 @@ class GenerarGraficos:
     None
     """
     
+    def random_color():
+    
+      return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+    
     df_mod = self.__df.melt(id_vars = [variable_x], 
                             value_vars = [variable_y1, variable_y2], 
                             var_name = 'Variable', value_name = 'Valor')
 
     fig = px.bar(df_mod, x = variable_x, y = 'Valor', color = 'Variable', 
                  barmode = 'group', 
-                 color_discrete_map = {variable_y1: '#1f77b4', variable_y2: '#ff7f0e'},
+                 color_discrete_map = {variable_y1: random_color(), variable_y2: random_color()},
                  title = titulo)
     
     fig.update_layout(
@@ -189,10 +198,6 @@ class GenerarGraficos:
       trace.name = nombres_leyendas[i+1]
       
     fig.show()
-
-
-
-
 
 
 
