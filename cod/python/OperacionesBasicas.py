@@ -100,9 +100,10 @@ class OperacionesBasicas(Madre):
         matriz = np.random.rand(10_000, 10_000)
         resultado = ne.evaluate('(matriz ** 100) * 10 + 5')
         return resultado
-
+  
+    @staticmethod
     @njit(parallel=True)
-    def operacion(self, matriz):
+    def operacion(matriz):
         """
         Realiza una operación en una matriz utilizando Numba.
 
@@ -154,7 +155,7 @@ class OperacionesBasicas(Madre):
         return np.cumprod(self.__lista)
 
     @staticmethod
-    @njit()
+    @njit(parallel=True)
     def _producto_acumulado(array):
         """
         Calcula el producto acumulado de un array utilizando Numba.
