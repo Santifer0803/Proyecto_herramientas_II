@@ -122,7 +122,7 @@ obj_operaciones_basicas.medir_tiempo("operacion_matricial_numba()")
 df_operacion_matriz_py = obj_generadordf.tiempos_dobles('Tiempos Numexpr', [2.38700, 0.61500, 0.34238, 2.34700 ], 'Tiempos Numba', [0.73300, 0.22180, 0.24621, 0.46500 ])
 ```
 
-```{python graf_tiempos_matrices_py}
+```{python graf_tiempos_matrices_numexpr_py}
 GenerarGraficos(df_operacion_matriz_py).barras_agrupadas('integrante', 'Tiempos Numexpr', 'Tiempos Numba', ['Condición', 'Numexpr', 'Numba'], 'Tiempos del ejercicio de matrices')
 ```
 
@@ -183,7 +183,7 @@ graficos.simples(tiempos.prod.acum.sapply,
 
 Ahora en Python.
 
-```{python tiempos_prod_acumulado_py}
+```{python calcular_tiempos_prod_acumulado_py}
 obj_operaciones_basicas.medir_tiempo("producto_acumulado()")
 ```
 
@@ -195,7 +195,7 @@ obj_operaciones_basicas.medir_tiempo("producto_acumulado_numba()")
 df_prod_acumulado_py = obj_generadordf.tiempos_dobles('Tiempos Cumprod', [0.018, 0.008, 0.007, 0.015], 'Tiempos Numba', [0.366, 0.029, 0.06, 0.124 ])
 ```
 
-```{python graf_tiempos_matrices_py}
+```{python graf_tiempos_matrices_numba_py}
 GenerarGraficos(df_prod_acumulado_py).barras_agrupadas('integrante', 'Tiempos Cumprod', 'Tiempos Numba', ['Condición', 'Cumprod', 'Numba'], 'Tiempos del producto acumulado')
 ```
 
