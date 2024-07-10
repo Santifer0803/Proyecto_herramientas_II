@@ -7,23 +7,12 @@ from Madre import Madre
 
 class RegresionLogistica(Madre):
     """
-    Clase para realizar una regresión logística
+    Clase para realizar una regresión logística.
   
     Attributes
     ----------
     ruta : str
-        una cadena de texto con una ruta de un archivo
-    
-    repeticiones : int
-        numero de repeticiones para la ejecición de un módulo, por default es 10
-        
-    num_iterations : int
-        Cantidad de iteraciones para la optimización por descenso de gradiente,
-        por default es 2000
-        
-    learning_rate : double
-      Tasa de aprendizaje en cada iteración del modelo, es un peso, por default
-      es 0.5
+           Cadena de texto con la ruta de un archivo
   
     Methods
     -------
@@ -47,38 +36,73 @@ class RegresionLogistica(Madre):
         ponen los "y" predichos con base en las probabilidades de A
         
     def entrenar(self):
-      Se ejecuta el modelo de regresión logística con las funciones anteriores
+        Se ejecuta el modelo de regresión logística con las funciones anteriores
     """
 
     def __init__(self, ruta):
       """
       Constructor de la clase RegresionLogistica
       
-      Parameters
+      Parameters:
       ----------
       ruta : str
-          una cadena de texto con una ruta de un archivo
+             Cadena de texto con la ruta de un archivo
       
-      Returns
+      Returns:
       -------
       None
       """
 
-        super().__init__(ruta)
+      super().__init__(ruta)
     
     @staticmethod
     @jit(nopython=True)
     def regresion_logistica(X_train, y_train, X_val, y_val, num_iterations=2000, learning_rate=0.5):
       
+        """
+        Entrena un modelo de regresión logística usando descenso de gradiente y calcula 
+        la precisión del modelo en los conjuntos de datos de entrenamiento y testeo.
+        
+        Parameters:
+        -----------
+        X_train : numpy.ndarray
+                  Conjunto de datos de entrenamiento
+            
+        y_train : numpy.ndarray
+                  Etiquetas del conjunto de datos de entrenamiento
+            
+        X_val : numpy.ndarray
+                Conjunto de datos de testeo
+            
+        y_val : numpy.ndarray
+                Etiquetas del conjunto de datos de testeo
+            
+        num_iterations : int, opcional
+                         Número de iteraciones para el algoritmo de optimización. Por defecto es 2000
+            
+        learning_rate : double, opcional
+                        Tasa de aprendizaje para el descenso de gradiente. Por defecto es 0.5
+        
+        Returns:
+        --------
+        accuracy_train : double
+            Precisión del modelo en el conjunto de datos de entrenamiento
+            
+        accuracy_val : double
+            Precisión del modelo en el conjunto de datos de testeo
+        """
+      
         def funcion_sigmoide(z):
           '''
-          Calcula la función logística de un vector
+          Calcula la función logística de un vector.
       
-          Parameters
+          Parameters:
+          -----------
           z : numpy.ndarray
               Vector de valores numéricos, calculado con numpy
       
-          Returns
+          Returns:
+          --------
           double
               Valor entre 0 y 1, este es el resultado de la función logística
           '''
@@ -89,26 +113,25 @@ class RegresionLogistica(Madre):
           '''
           Calcula el resultado z de una función lineal, la probabilidad con la
           función sigmoide y una función de pérdida conocida como "pérdida de
-          entropía cruzada binaria"
+          entropía cruzada binaria".
       
-          Parameters
+          Parameters:
+          -----------
           W : numpy.ndarray
               Tensor de pesos, uno de los parámetros del modelo
+              
           b : double
               Término de sesgo, uno de los parámetros del modelo
+              
           X : numpy.ndarray
               Datos usados como conjunto de entrenamiento del modelo, son los datos
               predichos
-          y : numpy.ndarray
-              Los datos reales del modelo
       
-          Returns
+          Returns:
+          --------
           A : double
               Valor entre 0 y 1, este es el resultado de la función logística con un
               vector Z calculado con los valores del modelo
-          cost : double
-              Resultado de la función de pérdida de entropía cruzada binaria, usando
-              la logverosimilitud
           '''
 
           Z = np.dot(W, X.T) + b
@@ -117,23 +140,28 @@ class RegresionLogistica(Madre):
 
         def propagacion_atras(X, A, y):
           '''
-          Calcula el gradiente, en este caso, las derivadas de W y b
+          Calcula el gradiente, en este caso, las derivadas de W y b.
       
-          Parameters
+          Parameters:
+          -----------
           X : numpy.ndarray
               Datos usados como conjunto de entrenamiento del modelo, son los datos
               predichos
+              
           A : double
               Resultado de la función logística con un vector Z calculado con los
               valores del modelo, se obtiene con la función de forward_propagation
+              
           y : numpy.ndarray
               Los datos reales del modelo
       
-          Returns
+          Returns:
+          --------
           dW : numpy.ndarray
-              Vector con las derivadas de cada entrada de W
+               Vector con las derivadas de cada entrada de W
+              
           db : double
-              Valor que representa la derivada del término del sesgo
+               Valor que representa la derivada del término del sesgo
           '''
 
           m = X.shape[0]
@@ -145,29 +173,37 @@ class RegresionLogistica(Madre):
         def optimizar(W, b, X, y, num_iterations, learning_rate):
           '''
           Utiliza un algoritmo iterativo llamado "descenso de gradiente" para
-          optimizar los parámetros
+          optimizar los parámetros.
       
-          Parameters
+          Parameters:
+          -----------
           W : numpy.ndarray
               Tensor de pesos, uno de los parámetros del modelo
+              
           b : double
               Término de sesgo, uno de los parámetros del modelo
+              
           X : numpy.ndarray
               Datos usados como conjunto de entrenamiento del modelo, son los datos
               predichos
+              
           y : numpy.ndarray
               Los datos reales del modelo
+              
           num_iterations : int
               Cantidad de iteraciones a realizar en el algoritmo
+              
           learning_rate : double
               Factor de escala para controlar la velocidad de aprendizaje en cada
               iteración, suele ser menor a 1 y positiva
       
-          Returns
-          params : dict
-              Parámetros del modelo optimizados
-          gradients : dict
-              Gradientes del modelo optimizados
+          Returns:
+          --------
+          W : numpy.ndarray
+             matriz de pesos optimizada
+             
+          b : double
+             sesgo optimizado
           '''
 
           for i in range(num_iterations):
@@ -180,20 +216,24 @@ class RegresionLogistica(Madre):
         def predecir(W, b, X):
           '''
           Se calculan las probabilidades con base en la función logística (A) y se
-          ponen los "y" predichos con base en las probabilidades de A
+          ponen los "y" predichos con base en las probabilidades de A.
       
-          Parameters
+          Parameters:
+          -----------
           W : numpy.ndarray
               Tensor de pesos, uno de los parámetros del modelo
+              
           b : double
               Término de sesgo, uno de los parámetros del modelo
+              
           X : numpy.ndarray
               Datos usados como conjunto de entrenamiento del modelo, son los datos
               predichos
       
-          Returns
-          y_prediction : numpy.ndarray
-              Parámetros del modelo optimizados
+          Returns:
+          --------
+          numpy.ndarray
+              Vector con los valores predichos (0 o 1) para cada entrada en X
           '''
 
           Z = np.dot(W, X.T) + b
@@ -211,38 +251,42 @@ class RegresionLogistica(Madre):
       
     def construir_datos(self):
       '''
-      Se construye la separación de datos correspondiente
+      Método que construye la separación de los datos correspondiente.
   
-      Parameters
+      Parameters:
+      -----------
       None
   
-      Returns
-        X_train : numpy.ndarray
-            Parte de los datos para entrenar al modelo, en este caso datos
-            predichos
-        y_train : numpy.ndarray
-            Parte de los datos para entrenar al modelo, en este caso los datos
-            reales
-        X_val : numpy.ndarray
-            Parte de los datos para validar al modelo, en este caso se validan
-            los datos predichos
-        Y_val : numpy.ndarray
-            Parte de los datos para validar al modelo, en este caso se validan
-            los datos reales
-
+      Returns:
+      --------
+      X_train : numpy.ndarray
+                Parte de los datos para entrenar al modelo, en este caso datos
+                predichos
+            
+      y_train : numpy.ndarray
+                Parte de los datos para entrenar al modelo, en este caso los datos
+                reales
+                
+      X_val : numpy.ndarray
+              Parte de los datos para validar al modelo, en este caso se validan
+              los datos predichos
+              
+      Y_val : numpy.ndarray
+              Parte de los datos para validar al modelo, en este caso se validan
+              los datos reales
       '''
 
-        datos = super().leer_csv()
+      datos = super().leer_csv()
       
-        # Datos y transformaciones
-        X =  np.array(datos.drop(["Outcome"], axis = 1))
-        y = np.array(datos["Outcome"])
+      # Datos y transformaciones
+      X =  np.array(datos.drop(["Outcome"], axis = 1))
+      y = np.array(datos["Outcome"])
         
-        # Normalización de los datos
-        X = (X - np.min(X)) / (np.max(X) - np.min(X))
+      # Normalización de los datos
+      X = (X - np.min(X)) / (np.max(X) - np.min(X))
         
-        # Separa la muestra
-        X_train, X_val, y_train, y_val = train_test_split(
+      # Separa la muestra
+      X_train, X_val, y_train, y_val = train_test_split(
             
             X, # Covaribles predictoras
             
@@ -252,37 +296,40 @@ class RegresionLogistica(Madre):
             
             test_size = 0.20 # Cantidad de datos de entrenamiento y prueba
             
-        )
+      )
         
-        return X_train, X_val, y_train, y_val
+      return X_train, X_val, y_train, y_val
     
     def medir_tiempos(self):
       '''
-      Se miden los tiempos necesarios
+      Método para medir los tiempos necesarios.
   
-      Parameters
+      Parameters:
+      -----------
       None
   
-      Returns
-        tiempo_inicial : double
-            Tiempo de las primeras 10 iteraciones que se realizan con Numba
-        tiempo_posterior : double
-            Tiempo de las posteriores 10 iteraciones que se realizan con Numba,
-            con el código analizado internamente por las primeras iteraciones
-
-      '''
-        # Se crea un array vacío para guardar los tiempo de ejecución
-        tiempos = np.array([], dtype = float)
-        
-        # Se extrae la data
-        X_train, X_val, y_train, y_val = self.construir_datos()
-        
-        # Se itera 10 veces para calcular el tiempo de ejecución del proceso cada vez
-        for i in range(10):
-        
-            inicio = time.time()
+      Returns:
+      --------
+      tiempo_inicial : double
+                       Tiempo de las primeras 10 iteraciones que se realizan con Numba
             
-            RegresionLogistica.regresion_logistica(
+      tiempo_posterior : double
+                         Tiempo de las posteriores 10 iteraciones que se realizan con Numba,
+                         con el código analizado internamente por las primeras iteraciones
+      '''
+      
+      # Se crea un array vacío para guardar los tiempo de ejecución
+      tiempos = np.array([], dtype = float)
+        
+      # Se extrae la data
+      X_train, X_val, y_train, y_val = self.construir_datos()
+        
+      # Se itera 10 veces para calcular el tiempo de ejecución del proceso cada vez
+      for i in range(10):
+        
+          inicio = time.time()
+            
+          RegresionLogistica.regresion_logistica(
                 
                 X_train, y_train, 
                 
@@ -290,28 +337,28 @@ class RegresionLogistica(Madre):
                 
                 num_iterations = 1000, learning_rate = 0.003
                 
-            )
+          )
         
-            fin = time.time()
+          fin = time.time()
         
-            # Se guarda el tiempo de ejecución
-            tiempos = np.append(tiempos, (fin - inicio))
+          # Se guarda el tiempo de ejecución
+          tiempos = np.append(tiempos, (fin - inicio))
         
         # Se calcula el promedio del tiempo de ejecución
-        tiempo_inicial = np.sum(tiempos) / 10
+      tiempo_inicial = np.sum(tiempos) / 10
         
         # Dado que la primera iteración demora más tiempo que el resto debido a cómo trabaja Numba,
         # se procede a realizar el mismo proceso una segunda vez, en la cual se va a notar que el 
         # tiempo promedio de ejecución se redujo significativamente, ya que una vez "calentadas" 
         # las funciones, Numba hace el proceso mucho más rápido
         
-        tiempos = np.array([], dtype = float)
+      tiempos = np.array([], dtype = float)
 
-        for i in range(10):
+      for i in range(10):
         
-            inicio = time.time()
+          inicio = time.time()
             
-            self.regresion_logistica(
+          RegresionLogistica.regresion_logistica(
                 
                 X_train, y_train, 
                 
@@ -319,13 +366,13 @@ class RegresionLogistica(Madre):
                 
                 num_iterations = 1000, learning_rate = 0.003
                 
-            )
+          )
         
-            fin = time.time()
+          fin = time.time()
             
-            tiempos = np.append(tiempos, (fin - inicio))
+      tiempos = np.append(tiempos, (fin - inicio))
         
-        tiempo_posterior = np.sum(tiempos) / 10
+      tiempo_posterior = np.sum(tiempos) / 10
         
-        return tiempo_inicial, tiempo_posterior
+      return tiempo_inicial, tiempo_posterior
 
