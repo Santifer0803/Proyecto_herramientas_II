@@ -27,39 +27,39 @@ class RegresionLogistica(Madre):
 
     @property
     def X_train(self):
-        return self._X_train
+        return self.__X_train
 
     @X_train.setter
     def X_train(self, value):
-        self._X_train = value
+        self.__X_train = value
 
     @property
     def y_train(self):
-        return self._y_train
+        return self.__y_train
 
     @y_train.setter
     def y_train(self, value):
-        self._y_train = value
+        self.__y_train = value
 
     @property
     def X_val(self):
-        return self._X_val
+        return self.__X_val
 
     @X_val.setter
     def X_val(self, value):
-        self._X_val = value
+        self.__X_val = value
 
     @property
     def y_val(self):
-        return self._y_val
+        return self.__y_val
 
     @y_val.setter
     def y_val(self, value):
-        self._y_val = value
+        self.__y_val = value
 
     def __str__(self):
-        return (f"RegresionLogistica(num_iterations={self.num_iterations}, "
-                f"learning_rate={self.learning_rate})")
+        return (f"RegresionLogistica(num_iterations={self.__num_iterations}, "
+                f"learning_rate={self.__learning_rate})")
 
     @staticmethod
     @jit(nopython=True)
@@ -100,11 +100,11 @@ class RegresionLogistica(Madre):
         return np.where(A > 0.5, 1, 0)
 
     def entrenar(self):
-        W = np.zeros((1, self.X_train.shape[1]))
+        W = np.zeros((1, self.__X_train.shape[1]))
         b = 0
-        W, b = RegresionLogistica.optimizar(W, b, self.X_train, self.y_train, self.num_iterations, self.learning_rate)
-        y_prediction_train = RegresionLogistica.predecir(W, b, self.X_train)
-        y_prediction_val = RegresionLogistica.predecir(W, b, self.X_val)
-        accuracy_train = 100 - np.mean(np.abs(y_prediction_train - self.y_train)) * 100
-        accuracy_val = 100 - np.mean(np.abs(y_prediction_val - self.y_val)) * 100
+        W, b = RegresionLogistica.optimizar(W, b, self.__X_train, self.__y_train, self.__num_iterations, self.__learning_rate)
+        y_prediction_train = RegresionLogistica.predecir(W, b, self.__X_train)
+        y_prediction_val = RegresionLogistica.predecir(W, b, self.__X_val)
+        accuracy_train = 100 - np.mean(np.abs(y_prediction_train - self.__y_train)) * 100
+        accuracy_val = 100 - np.mean(np.abs(y_prediction_val - self.__y_val)) * 100
         return accuracy_train, accuracy_val
