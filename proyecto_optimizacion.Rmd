@@ -401,20 +401,10 @@ graficos.dobles.graf(
 )
 ```
 
-Ahora se realiza el ejercicio en Python.
-
-```{python objeto_TrabajoDataframes_Muertes_limpias}
-muertes_limpias = obj_Muertes.limpiar_datos()
-obj_Muertes_limpias = TrabajoDataframes(0)
-obj_Muertes_limpias.dataframe = muertes_limpias
-```
-
-```{python medir_tiempo_graficos_paralelo}
-obj_Muertes_limpias.medir_tiempo("generar_graficos()")
-```
+Ahora se realiza el ejercicio en Python, en este caso solo se ponen los tiempos del DataFrame y el gráfico, pues la librería *Joblib* daba problemas al pasarlo a este formato, entonces, este ejercicio se deja por aparte en un *Jupyter Notebook*
 
 ```{python tiempos_graficos_paralelo}
-df_limpieza = ob_gen_limpieza.tiempos_simples([9.71, 8.28, 8.36, 17.07])
+df_limpieza = obj_generadordf.tiempos_simples([9.71, 8.28, 8.36, 17.07])
 ```
 
 ```{python grafico_graficos_paralelo}
