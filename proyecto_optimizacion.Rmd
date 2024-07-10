@@ -401,7 +401,7 @@ graficos.dobles.graf(
 )
 ```
 
-Ahora se realiza el ejercicio en Python, en este caso solo se ponen los tiempos del DataFrame y el gráfico, pues la librería *Joblib* daba problemas al pasarlo a este formato, entonces, este ejercicio se deja por aparte en un *Jupyter Notebook*
+Ahora se realiza el ejercicio en Python, en este caso solo se ponen los tiempos del DataFrame y el gráfico, pues la librería *Joblib* daba problemas al pasarlo a este formato, entonces, este ejercicio se deja por aparte en un *Jupyter Notebook*.
 
 ```{python tiempos_graficos_paralelo}
 df_limpieza = obj_generadordf.tiempos_simples([9.71, 8.28, 8.36, 17.07])
