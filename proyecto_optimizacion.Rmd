@@ -602,7 +602,7 @@ obj_Base_salarios.medir_tiempo("imputar_por_agrupacion()")
 ```
 
 ```{python tiempos impu agrupacion}
-df_agrupacion = obj_generadordf.tiempos_simples([0.067, 0.022, 0.021, 0,052])
+df_agrupacion = obj_generadordf.tiempos_simples([0.067, 0.022, 0.021, 0.052])
 ```
 
 ```{python grafico impu agrupacion}
@@ -677,7 +677,7 @@ obj_regresion_logistica.medir_tiempo("entrenar()")
 ```
 
 ```{python df_regresion_logistica_py}
-df_regresion_logistica_py = obj_generadordf.tiempos_simples([0.1062, 0.0067, 0.0045, 0.0398 ] )
+df_regresion_logistica_py = obj_generadordf.tiempos_simples([0.1062, 0.0067, 0.0045, 0.0398])
 ```
 
 ```{python graf_regresionlogistica_py}
