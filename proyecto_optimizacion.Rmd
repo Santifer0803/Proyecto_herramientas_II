@@ -673,7 +673,7 @@ graficos.simples(tiempos.regresion.log,
 Se realiza la regresión logística en Python.
 
 ```{python tiempos_regresionlogistica_py}
-obj_regresion_logistica.medir_tiempo("entrenar()")
+obj_regresion_logistica.medir_tiempos()
 ```
 
 ```{python df_regresion_logistica_py}
