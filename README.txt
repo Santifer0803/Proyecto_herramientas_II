@@ -11,3 +11,5 @@ info: Se ubica la información de los ejercicios desarrollados para el proyecto.
 res: Se ubican los resultados del proyecto
 
 proyecto_optimizacion.Rmd: Archivo en donde se juntan todos los ejercicios, tiempos de ejecución y gráficos del proyecto.
+
+graficos_paralelo.ipynb: Archivo en donde se adjunta el ejercicio de gráficos en paralelo, este se crea debido a que Joblib generaba problemas en el Rmd.
