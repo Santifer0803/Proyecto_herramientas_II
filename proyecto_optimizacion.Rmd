@@ -729,3 +729,172 @@ df_modelo = obj_generadordf.tiempos_simples([0.05, 0.02, 0.02, 0,03])
 GenerarGraficos(df_modelo).barras('integrante', 'tiempo','Tiempos del modelo estocástico')
 ```
 
+## Gráficos de comparación entre lenguajes
+
+Se comparan todos los ejercicios entre plataformas para determinar el resultado final.
+
+```{r steup_graficos_plataformas}
+# Scripts de R para la preparación
+scripts_r <- c(
+  "cod/r/fun_df_tiempos_lenguajes.R",
+  "cod/r/fun_graficos_dobles_plataformas.R"
+)
+
+# Se leen los scripts
+invisible(lapply(scripts_r, source))
+```
+
+```{r df_matrices_plataformas}
+matrices.plataformas <-
+  df.tiempos.lenguajes(
+    c(0.222, 0.246, 0.465, 0.733),
+    tiempos.matrices$tiempo,
+    c("Eyeri", "Santiago", "Paula", "Alejandro")
+  )
+```
+
+```{r grafico_matrices_plataformas}
+graficos.dobles.plataformas(
+  matrices.plataformas,
+  "Tiempos de matrices entre plataformas",
+  c("Python" = "darkred", "R" = "darksalmon")
+)
+```
+
+```{r df_prodacum_plataformas}
+prodacum.plataformas <-
+  df.tiempos.lenguajes(
+    c(0.007, 0.015, 0.008, 0.018),
+    tiempos.producto.acumulado$cumprod,
+    c("Santiago", "Paula", "Eyeri", "Alejandro")
+  )
+```
+
+```{r grafico_prodacum_plataformas}
+graficos.dobles.plataformas(
+  prodacum.plataformas,
+  "Tiempos de producto acumulado entre plataformas",
+  c("Python" = "darkorchid4", "R" = "steelblue4")
+)
+```
+
+```{r df_texto_plataformas}
+texto.plataformas <-
+  df.tiempos.lenguajes(
+    c(0.014, 0.037, 0.013, 0.035),
+    tiempos.texto$chartr,
+    c("Santiago", "Paula", "Eyeri", "Alejandro")
+  )
+```
+
+```{r grafico_texto_plataformas}
+graficos.dobles.plataformas(
+  texto.plataformas,
+  "Tiempos de cifrado César entre plataformas",
+  c("Python" = "aquamarine3", "R" = "mediumvioletred")
+)
+```
+
+```{r df_limpieza_plataformas}
+limpieza.plataformas <-
+  df.tiempos.lenguajes(
+    c(0.978, 1.972, 0.828, 2.288),
+    tiempos.limpieza$con.datatable,
+    c("Santiago", "Paula", "Eyeri", "Alejandro")
+  )
+```
+
+```{r grafico_limpieza_plataformas}
+graficos.dobles.plataformas(
+  limpieza.plataformas,
+  "Tiempos de limpieza entre plataformas",
+  c("Python" = "mistyrose3", "R" = "tan3")
+)
+```
+
+```{r df_graficos_paralelos_plataformas}
+graficos.plataformas <-
+  df.tiempos.lenguajes(
+    c(8.36, 8.28, 17.07, 9.71),
+    (tiempos.graficos$barras + tiempos.graficos$histogramas),
+    c("Santiago", "Eyeri", "Paula", "Alejandro")
+  )
+```
+
+```{r grafico_graficos_paralelo_plataformas}
+graficos.dobles.plataformas(
+  graficos.plataformas,
+  "Tiempos de graficos en paralelo entre plataformas",
+  c("Python" = "forestgreen", "R" = "midnightblue")
+)
+```
+
+```{r df_elimnulos_plataformas}
+mediam.plataformas <-
+  df.tiempos.lenguajes(
+    c(0.055, 0.034, 0.198, 0.053),
+    tiempos.eliminar.columnas$dt,
+    c("Santiago", "Eyeri", "Paula", "Alejandro")
+  )
+```
+
+```{r grafico_elimnulos_plataformas}
+graficos.dobles.plataformas(
+  mediam.plataformas,
+  "Tiempos de media móvil entre plataformas",
+  c("Python" = "mediumorchid2", "R" = "slateblue2")
+)
+```
+
+```{r df_agrupacion_plataformas}
+agrupacion.plataformas <-
+  df.tiempos.lenguajes(
+    c(0.021, 0.022, 0.052, 0.067),
+    tiempos.agrupacion$con.datatable,
+    c("Santiago", "Eyeri", "Paula", "Alejandro")
+  )
+```
+
+```{r grafico_agrupacion_plataformas}
+graficos.dobles.plataformas(
+  agrupacion.plataformas,
+  "Tiempos de agrupación entre plataformas",
+  c("Python" = "orchid3", "R" = "darkslategray3")
+)
+```
+
+```{r df_regresion_logistica_plataformas}
+reglog.plataformas <-
+  df.tiempos.lenguajes(
+    c(0.0067, 0.0045, 0.0398, 0.1062),
+    tiempos.regresion.log$tiempo,
+    c("Eyeri", "Santiago", "Paula", "Alejandro")
+  )
+```
+
+```{r grafico_regresion_logistica_plataformas}
+graficos.dobles.plataformas(
+  reglog.plataformas,
+  "Tiempos de regresión logística entre plataformas",
+  c("Python" = "hotpink", "R" = "steelblue2")
+)
+```
+
+```{r df_estocastico_plataformas}
+estocast.plataformas <-
+  df.tiempos.lenguajes(
+    c(0.02, 0.02, 0.03, 0.05),
+    tiempos.estocast$tiempo,
+    c("Eyeri", "Santiago", "Paula", "Alejandro")
+  )
+```
+
+```{r grafico_estocastico_plataformas}
+graficos.dobles.plataformas(
+  estocast.plataformas,
+  "Tiempos del modelo estocástico entre plataformas",
+  c("Python" = "lightsalmon2", "R" = "deepskyblue2")
+)
+```
+
+
